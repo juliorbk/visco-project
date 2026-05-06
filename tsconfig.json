@@ -2,16 +2,24 @@
   "compilerOptions": {
     "target": "es2023",
     "module": "esnext",
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
     "skipLibCheck": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    "resolveJsonModule": true,
     "noEmit": true,
+
+    /* JSX support (Uncomment/adjust if using a UI framework) */
+    // "jsx": "react-jsx",
+
+    /* Type Checking */
+    "strict": true,
 
     /* Linting */
     "noUnusedLocals": true,

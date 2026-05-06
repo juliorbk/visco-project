@@ -1,34 +1,179 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink } from "react-router-dom";
 
 const menuItems = [
-  { path: '/', label: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-  { path: '/inventory', label: 'Inventory', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-  { path: '/procurement', label: 'Procurement', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
-  { path: '/reports', label: 'Reports', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
-  { path: '/suppliers', label: 'Suppliers', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+  {
+    path: "/",
+    label: "Dashboard",
+    icon: (
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    path: "/inventory",
+    label: "Inventory",
+    icon: (
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <path d="M8 21h8M12 17v4" />
+      </svg>
+    ),
+  },
+  {
+    path: "/procurement",
+    label: "Procurement",
+    icon: (
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="9" cy="21" r="1" />
+        <circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      </svg>
+    ),
+  },
+  {
+    path: "/suppliers",
+    label: "Suppliers",
+    icon: (
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    path: "/reports",
+    label: "Reports",
+    icon: (
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Sidebar() {
   return (
-    <div className="w-64 bg-gradient-to-b from-teal-700 to-teal-900 text-white flex flex-col">
-      <div className="p-6 border-b border-teal-600">
-        <h1 className="text-2xl font-bold">Visco Orinoco</h1>
+    <div
+      className="w-56 bg-white border-r border-gray-100 flex flex-col"
+      style={{ minHeight: "100vh" }}
+    >
+      {/* Logo */}
+      <div className="p-5 pb-6">
+        <div className="flex items-center gap-3">
+          <div
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+            style={{ background: "#7B1A1A" }}
+          >
+            V
+          </div>
+          <div>
+            <div
+              className="font-bold text-sm leading-tight"
+              style={{ color: "#7B1A1A" }}
+            >
+              Visco Orinoco
+            </div>
+            <div className="text-xs text-gray-400">Enterprise Tier</div>
+          </div>
+        </div>
       </div>
-      <nav className="flex-1 p-4 space-y-2">
+
+      {/* New Purchase Order Button */}
+      <div className="px-4 mb-5">
+        <NavLink
+          to="/procurement"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-white text-sm font-medium transition-opacity hover:opacity-90"
+          style={{ background: "#7B1A1A" }}
+        >
+          <span className="text-lg leading-none">+</span>
+          <span>New Purchase Order</span>
+        </NavLink>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 space-y-0.5">
         {menuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
+            end={item.path === "/"}
             className={({ isActive }) =>
-              `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive ? 'bg-teal-600 text-white' : 'text-teal-100 hover:bg-teal-600 hover:text-white'
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors relative ${
+                isActive
+                  ? "font-semibold"
+                  : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
               }`
             }
+            style={({ isActive }) =>
+              isActive ? { color: "#7B1A1A", background: "#FDF0F0" } : {}
+            }
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-            </svg>
-            <span>{item.label}</span>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span
+                    className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-l"
+                    style={{ background: "#7B1A1A" }}
+                  />
+                )}
+                <span className={isActive ? "opacity-100" : "opacity-60"}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
