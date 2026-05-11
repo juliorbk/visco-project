@@ -16,7 +16,7 @@
     "noEmit": true,
 
     /* JSX support (Uncomment/adjust if using a UI framework) */
-    // "jsx": "react-jsx",
+    "jsx": "react-jsx",
 
     /* Type Checking */
     "strict": true,

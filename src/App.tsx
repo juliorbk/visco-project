@@ -6,6 +6,7 @@ import Procurement from "./pages/Procurement";
 import Reports from "./pages/Reports";
 import Suppliers from "./pages/Suppliers";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
       <Routes>
         {/* Ruta pública (sin Layout) */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Rutas privadas (envueltas en el Layout con el menú lateral) */}
         <Route element={<Layout />}>
