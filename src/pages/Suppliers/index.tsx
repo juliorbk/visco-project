@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { BuildingOffice2Icon, TruckIcon, ComputerDesktopIcon, CubeIcon, CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 const PRIMARY = "#7B1A1A";
 
@@ -18,7 +19,7 @@ interface Supplier {
     date: string;
     status: "Completado" | "En Tránsito" | "Procesando";
   }[];
-  icon: string;
+  icon: ReactNode;
 }
 
 const suppliers: Supplier[] = [
@@ -42,7 +43,7 @@ const suppliers: Supplier[] = [
       { id: "PO-2023-102", date: "05 Nov 2023", status: "En Tránsito" },
       { id: "PO-2023-115", date: "28 Nov 2023", status: "Procesando" },
     ],
-    icon: "🏭",
+    icon: <BuildingOffice2Icon className="w-5 h-5 text-gray-600" />,
   },
   {
     id: 2,
@@ -56,7 +57,7 @@ const suppliers: Supplier[] = [
     since: 2020,
     certifications: [{ label: "ISO 9001", type: "ok" }],
     history: [{ id: "PO-2023-090", date: "14 Oct 2023", status: "Completado" }],
-    icon: "🚚",
+    icon: <TruckIcon className="w-5 h-5 text-gray-600" />,
   },
   {
     id: 3,
@@ -76,7 +77,7 @@ const suppliers: Supplier[] = [
       { id: "PO-2023-091", date: "20 Oct 2023", status: "Completado" },
       { id: "PO-2023-108", date: "10 Nov 2023", status: "Procesando" },
     ],
-    icon: "💻",
+    icon: <ComputerDesktopIcon className="w-5 h-5 text-gray-600" />,
   },
   {
     id: 4,
@@ -90,7 +91,7 @@ const suppliers: Supplier[] = [
     since: 2021,
     certifications: [{ label: "ISO 14001", type: "ok" }],
     history: [{ id: "PO-2023-095", date: "18 Oct 2023", status: "Completado" }],
-    icon: "📦",
+    icon: <CubeIcon className="w-5 h-5 text-gray-600" />,
   },
 ];
 
@@ -259,7 +260,7 @@ export default function Suppliers() {
                 }}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-xl">
+                  <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
                     {s.icon}
                   </div>
                   <span
@@ -339,7 +340,7 @@ export default function Suppliers() {
             {/* Avatar */}
             <div className="flex flex-col items-center mb-4">
               <div
-                className="w-14 h-14 rounded-full border-2 flex items-center justify-center text-2xl mb-2"
+                className="w-14 h-14 rounded-full border-2 flex items-center justify-center mb-2"
                 style={{ borderColor: PRIMARY }}
               >
                 {selected.icon}

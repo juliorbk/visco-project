@@ -6,6 +6,7 @@ import LoginPage from "./LoginPage";
 import DashboardPage from "./pages/Dashboard";
 import ProductsPage from "./pages/Inventory";
 import PurchaseOrdersPage from "./PurchaseOrdersPage";
+import InboundPage from "./InboundPage";
 import SuppliersPage from "./pages/Suppliers";
 import ReportsPage from "./pages/Reports";
 import Register from "./pages/Register";
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/procurement" element={<Navigate to="/procurement/orders" replace />} />
               <Route path="/procurement/orders" element={<PurchaseOrdersPage />} />
+              <Route path="/procurement/receipts" element={<InboundPage />} />
 
               {/* Suppliers — ADMIN, MANAGER, PROCUREMENT only */}
               <Route element={<ProtectedRoute roles={["ADMIN", "MANAGER", "PROCUREMENT"]} />}>
