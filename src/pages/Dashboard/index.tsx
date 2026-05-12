@@ -5,6 +5,10 @@ import { getProducts } from "../../api/products";
 import type { PurchaseOrderResponse, ProductResponse } from "../../index";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLE } from "../../utils/labels";
 import { ShoppingCartIcon, ClockIcon, CheckCircleIcon, ArchiveBoxIcon } from "@heroicons/react/24/outline";
+import ChartCard from "./ChartCard";
+import ExpensesBarChart from "./ExpensesBarChart";
+import ExpenseBreakdownDonut from "./ExpenseBreakdownDonut";
+import { MOCK_METRICS } from "./metricsData";
 
 const PRIMARY = "#7B1A1A";
 
@@ -26,18 +30,20 @@ export default function DashboardPage() {
 
   const pending = orders.filter((o) => o.status === "PENDING").length;
   const approved = orders.filter((o) => o.status === "APPROVED").length;
+  const inTransit = orders.filter((o) => o.status === "IN_TRANSIT").length;
   const activeProducts = products.filter((p) => p.active).length;
   const recentOrders = orders.slice(0, 5);
 
   const kpis = [
-    { label: "Total Orders", value: orders.length, icon: ShoppingCartIcon, color: "#7B1A1A" },
-    { label: "Pending Approval", value: pending, icon: ClockIcon, color: "#F59E0B" },
-    { label: "Approved / In Progress", value: approved, icon: CheckCircleIcon, color: "#10B981" },
-    { label: "Active Products", value: activeProducts, icon: ArchiveBoxIcon, color: "#6366F1" },
+    { label: "Órdenes Totales", value: orders.length, icon: ShoppingCartIcon, color: "#7B1A1A" },
+    { label: "Pendientes", value: pending, icon: ClockIcon, color: "#F59E0B" },
+    { label: "Aprobadas / En Tránsito", value: approved + inTransit, icon: CheckCircleIcon, color: "#10B981" },
+    { label: "Productos Activos", value: activeProducts, icon: ArchiveBoxIcon, color: "#6366F1" },
   ];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-400 mt-0.5">Resumen operativo actualizado.</p>
@@ -47,7 +53,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((k) => (
           <div key={k.label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="mb-2"><k.icon className="w-6 h-6" /></div>
+            <div className="mb-2"><k.icon className="w-6 h-6" style={{ color: k.color }} /></div>
             <div className="text-xs text-gray-400 mb-1">{k.label}</div>
             <div className="text-3xl font-bold" style={{ color: k.color }}>
               {loading ? <span className="text-gray-200 animate-pulse">—</span> : k.value}
@@ -56,11 +62,25 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-8">
+          <ChartCard title="Gastos vs Proyecciones" subtitle="Últimos 6 meses">
+            <ExpensesBarChart data={MOCK_METRICS.monthlyExpenses} />
+          </ChartCard>
+        </div>
+        <div className="lg:col-span-4">
+          <ChartCard title="Desglose de Gastos" subtitle="Distribución por categoría">
+            <ExpenseBreakdownDonut data={MOCK_METRICS.expenseBreakdown} />
+          </ChartCard>
+        </div>
+      </div>
+
       {/* Recent orders */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <span className="font-semibold text-gray-900">Órdenes Recientes</span>
-          <Link to="/procurement/orders" className="text-sm font-semibold" style={{ color: PRIMARY }}>
+          <Link to="/procurement/orders" className="text-sm font-semibold hover:underline" style={{ color: PRIMARY }}>
             Ver todas →
           </Link>
         </div>

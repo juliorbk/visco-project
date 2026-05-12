@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "apexcharts": "^5.11.0",
     "axios": "^1.16.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
