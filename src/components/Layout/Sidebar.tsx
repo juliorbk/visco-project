@@ -1,3 +1,4 @@
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import type { UserRole } from "../../index";
@@ -6,7 +7,7 @@ interface MenuItem {
   path: string;
   label: string;
   roles: readonly UserRole[];
-  icon: JSX.Element;
+  icon: React.ReactNode;
 }
 
 const menuItems: MenuItem[] = [
