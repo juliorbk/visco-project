@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import type { ProductRequest, ProductResponse, SupplierOption, CategoryOption } from "../index";
 import { UOM_LABELS } from "../utils/labels";
 
@@ -24,7 +24,7 @@ const EMPTY: ProductRequest = {
   category: { id: 0 },
 };
 
-export default function ProductForm({ initial, suppliers, categories, onSubmit, onCancel, loading }: ProductFormProps) {
+const ProductForm = memo(function ProductForm({ initial, suppliers, categories, onSubmit, onCancel, loading }: ProductFormProps) {
   const [form, setForm] = useState<ProductRequest>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof ProductRequest | "supplierId" | "categoryId", string>>>({});
 
@@ -160,4 +160,6 @@ export default function ProductForm({ initial, suppliers, categories, onSubmit, 
       </div>
     </form>
   );
-}
+});
+
+export default ProductForm;

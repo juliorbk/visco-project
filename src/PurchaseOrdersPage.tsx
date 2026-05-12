@@ -68,7 +68,7 @@ export default function PurchaseOrdersPage() {
       .catch(() => setProducts([]));
   }, []);
 
-  const handleCreate = async (data: PurchaseOrderRequest) => {
+  const handleCreate = useCallback(async (data: PurchaseOrderRequest) => {
     setSaving(true);
     try {
       await createOrder(data);
@@ -77,9 +77,9 @@ export default function PurchaseOrdersPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [fetchOrders]);
 
-  const handleApprove = async (id: number) => {
+  const handleApprove = useCallback(async (id: number) => {
     setSaving(true);
     try {
       await approveOrder(id);
@@ -90,9 +90,9 @@ export default function PurchaseOrdersPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [fetchOrders, detailOrder]);
 
-  const handleCancel = async (id: number) => {
+  const handleCancel = useCallback(async (id: number) => {
     setSaving(true);
     try {
       await cancelOrder(id);
@@ -101,9 +101,9 @@ export default function PurchaseOrdersPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [fetchOrders, detailOrder]);
 
-  const handleReceive = async (orderId: number, data: ReceiveGoodsRequest) => {
+  const handleReceive = useCallback(async (orderId: number, data: ReceiveGoodsRequest) => {
     setSaving(true);
     try {
       await receiveGoods(orderId, data);
@@ -112,7 +112,7 @@ export default function PurchaseOrdersPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [fetchOrders]);
 
   const handleDownloadPdf = async (orderId: number) => {
     setDownloadingPdf(true);

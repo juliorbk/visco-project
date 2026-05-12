@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import type {
   PurchaseOrderRequest,
   PurchaseOrderItemRequest,
@@ -19,7 +19,7 @@ interface PurchaseOrderFormProps {
 
 const EMPTY_ITEM: PurchaseOrderItemRequest = { productId: 0, quantity: 1, unitPrice: 0 };
 
-export default function PurchaseOrderForm({
+const PurchaseOrderForm = memo(function PurchaseOrderForm({
   suppliers,
   products,
   onSubmit,
@@ -204,4 +204,6 @@ export default function PurchaseOrderForm({
       </div>
     </form>
   );
-}
+});
+
+export default PurchaseOrderForm;

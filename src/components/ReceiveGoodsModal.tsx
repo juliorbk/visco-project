@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import Modal from "./Modal";
 import type { PurchaseOrderResponse, ReceiveGoodsRequest } from "../index";
 
@@ -12,7 +12,7 @@ interface ReceiveGoodsModalProps {
   loading?: boolean;
 }
 
-export default function ReceiveGoodsModal({
+const ReceiveGoodsModal = memo(function ReceiveGoodsModal({
   open,
   order,
   onClose,
@@ -135,4 +135,6 @@ export default function ReceiveGoodsModal({
       )}
     </Modal>
   );
-}
+});
+
+export default ReceiveGoodsModal;

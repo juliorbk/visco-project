@@ -56,7 +56,7 @@ export default function ProductsPage() {
     );
   }, []);
 
-  const handleCreate = async (data: ProductRequest) => {
+  const handleCreate = useCallback(async (data: ProductRequest) => {
     setSaving(true);
     try {
       await createProduct(data);
@@ -65,9 +65,9 @@ export default function ProductsPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [fetchProducts]);
 
-  const handleEdit = async (data: ProductRequest) => {
+  const handleEdit = useCallback(async (data: ProductRequest) => {
     if (!selected) return;
     setSaving(true);
     try {
@@ -78,9 +78,9 @@ export default function ProductsPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [selected, fetchProducts]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!selected) return;
     setSaving(true);
     try {
@@ -91,7 +91,7 @@ export default function ProductsPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [selected, fetchProducts]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
