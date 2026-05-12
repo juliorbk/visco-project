@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArchiveBoxIcon, CheckCircleIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline";
 import type { UserRole } from "../../index";
 
 const PRIMARY = "#7B1A1A";
@@ -402,15 +403,15 @@ export default function Register() {
         >
           {[
             {
-              icon: "📦",
+              icon: <ArchiveBoxIcon className="w-5 h-5 text-white/80" />,
               label: "Inventario activo",
               value: "45,910 unidades",
             },
-            { icon: "✅", label: "Tasa de cumplimiento", value: "98.2%" },
-            { icon: "🤝", label: "Proveedores activos", value: "89 empresas" },
+            { icon: <CheckCircleIcon className="w-5 h-5 text-white/80" />, label: "Tasa de cumplimiento", value: "98.2%" },
+            { icon: <BuildingOffice2Icon className="w-5 h-5 text-white/80" />, label: "Proveedores activos", value: "89 empresas" },
           ].map((s) => (
             <div key={s.label} className="stat-chip">
-              <span style={{ fontSize: 18 }}>{s.icon}</span>
+              <span style={{ display: "flex" }}>{s.icon}</span>
               <div>
                 <div
                   style={{

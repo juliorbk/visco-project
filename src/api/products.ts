@@ -48,3 +48,7 @@ export async function updateProduct(
 export async function deleteProduct(id: number): Promise<void> {
   await client.delete(`/inventory/products/${id}`);
 }
+
+export async function activateProduct(id: number): Promise<void> {
+  await client.patch(`/inventory/products/${id}/activate`);
+}

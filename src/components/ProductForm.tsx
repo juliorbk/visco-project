@@ -146,15 +146,21 @@ const ProductForm = memo(function ProductForm({ initial, suppliers, categories, 
 
       {/* Actions */}
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onCancel} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+        <button type="button" onClick={onCancel} className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all">
+          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
           Cancelar
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:shadow-md disabled:opacity-60"
           style={{ background: loading ? "#9CA3AF" : "#7B1A1A" }}
         >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
           {loading ? "Guardando…" : initial ? "Guardar Cambios" : "Crear Producto"}
         </button>
       </div>

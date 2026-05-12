@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Modal from "../../components/Modal";
 import ProductForm from "../../components/ProductForm";
-import { getProducts, createProduct, updateProduct, deleteProduct } from "../../api/products";
+import { getProducts, createProduct, updateProduct, deleteProduct, activateProduct } from "../../api/products";
+import { getSuppliers } from "../../api/suppliers";
 import client from "../../api/client";
 import { useAuth } from "../../contexts/AuthContext";
 import type { ProductResponse, ProductRequest, SupplierOption, CategoryOption } from "../../index";
@@ -23,7 +24,7 @@ export default function ProductsPage() {
   const [suppliers, setSuppliers] = useState<SupplierOption[]>([]);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
 
-  const [modalMode, setModalMode] = useState<"create" | "edit" | "delete" | null>(null);
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "deactivate" | null>(null);
   const [selected, setSelected] = useState<ProductResponse | null>(null);
 
   const PAGE_SIZE = 10;
@@ -51,8 +52,8 @@ export default function ProductsPage() {
 
   // Fetch suppliers + categories for selects
   useEffect(() => {
-    client.get("/suppliers").then((r) => setSuppliers(r.data)).catch(() =>
-      setSuppliers([{ id: 1, name: "Proveedor Demo" }])
+    getSuppliers().then((data) => setSuppliers(data.filter((s) => s.active))).catch(() =>
+      setSuppliers([{ id: 1, name: "Proveedor Demo", active: true }])
     );
     client.get("/categories").then((r) => setCategories(r.data)).catch(() =>
       setCategories([{ id: 1, name: "Materiales" }])
@@ -83,18 +84,26 @@ export default function ProductsPage() {
     }
   }, [selected, fetchProducts]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDeactivate = useCallback(async () => {
     if (!selected) return;
     setSaving(true);
     try {
       await deleteProduct(selected.id);
       setModalMode(null);
-      setSelected(null);
       fetchProducts();
     } finally {
       setSaving(false);
     }
   }, [selected, fetchProducts]);
+
+  const handleActivate = useCallback(async (product: ProductResponse) => {
+    try {
+      await activateProduct(product.id);
+      fetchProducts();
+    } catch {
+      // keep current
+    }
+  }, [fetchProducts]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -182,20 +191,39 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       {isAdmin ? (
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => { setSelected(p); setModalMode("edit"); }}
-                            className="text-xs font-semibold hover:underline"
-                            style={{ color: PRIMARY }}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm"
+                            style={{ background: "#6366F1" }}
                           >
+                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
                             Editar
                           </button>
-                          <button
-                            onClick={() => { setSelected(p); setModalMode("delete"); }}
-                            className="text-xs font-semibold text-red-500 hover:underline"
-                          >
-                            Eliminar
-                          </button>
+                          {p.active ? (
+                            <button
+                              onClick={() => { setSelected(p); setModalMode("deactivate"); }}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm bg-red-600 hover:bg-red-700"
+                            >
+                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                              Desactivar
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleActivate(p)}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm"
+                              style={{ background: "#10B981" }}
+                            >
+                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Activar
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <span className="text-xs text-gray-300">—</span>
@@ -213,11 +241,17 @@ export default function ProductsPage() {
           <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
             <span>Página {page + 1} de {totalPages}</span>
             <div className="flex items-center gap-2">
-              <button disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 rounded-lg border border-gray-200 text-xs disabled:opacity-40 hover:bg-gray-50">
-                ← Anterior
+              <button disabled={page === 0} onClick={() => setPage((p) => p - 1)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium disabled:opacity-40 hover:bg-gray-50 hover:text-gray-700 transition-all">
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                Anterior
               </button>
-              <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 rounded-lg border border-gray-200 text-xs disabled:opacity-40 hover:bg-gray-50">
-                Siguiente →
+              <button disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-medium disabled:opacity-40 hover:bg-gray-50 hover:text-gray-700 transition-all">
+                Siguiente
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
               </button>
             </div>
           </div>
@@ -247,23 +281,29 @@ export default function ProductsPage() {
         />
       </Modal>
 
-      {/* Delete confirmation modal */}
-      <Modal open={modalMode === "delete"} onClose={() => setModalMode(null)} title="Eliminar Producto" size="sm">
+      {/* Deactivate confirmation modal */}
+      <Modal open={modalMode === "deactivate"} onClose={() => setModalMode(null)} title="Desactivar Producto" size="sm">
         <div className="text-center py-2">
           <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
             <svg width="26" height="26" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
             </svg>
           </div>
-          <p className="text-gray-700 font-medium mb-1">¿Eliminar este producto?</p>
+          <p className="text-gray-700 font-medium mb-1">¿Desactivar este producto?</p>
           <p className="text-red-600 font-bold text-base mb-1">{selected?.name}</p>
-          <p className="text-gray-400 text-sm mb-6">Esta acción realizará una baja lógica. No se puede deshacer.</p>
+          <p className="text-gray-400 text-sm mb-6">El producto quedará inactivo y no podrá ser usado en nuevas órdenes.</p>
           <div className="flex gap-3">
-            <button onClick={() => setModalMode(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <button onClick={() => setModalMode(null)} className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-all">
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
               Cancelar
             </button>
-            <button onClick={handleDelete} disabled={saving} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors">
-              {saving ? "Eliminando…" : "Eliminar"}
+            <button onClick={handleDeactivate} disabled={saving} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition-all disabled:opacity-60">
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+              {saving ? "Desactivando…" : "Desactivar"}
             </button>
           </div>
         </div>
