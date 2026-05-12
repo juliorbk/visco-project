@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import type { UserRole } from "../../index";
 
 const PRIMARY = "#7B1A1A";
 const PRIMARY_DARK = "#5C1212";
 
-// Mirrors UserRole enum from the backend
-const USER_ROLES = ["ADMIN", "MANAGER", "USER"] as const;
-type UserRole = (typeof USER_ROLES)[number];
+const USER_ROLES: UserRole[] = ["ADMIN", "MANAGER", "PROCUREMENT", "WAREHOUSEMAN"];
 
 // Mirrors RequestingArea entity — fetch from your API in production
 const REQUESTING_AREAS = [
