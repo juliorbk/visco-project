@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export interface InventoryItem {
   id: number;
@@ -27,13 +27,10 @@ function getStatus(stock: number): string {
   return 'In Stock';
 }
 
+const INITIAL_FORM = { name: '', sku: '', category: 'Materials', stock: 0 };
+
 export default function InventoryModal({ mode, item, onClose, onSave, onDelete }: InventoryModalProps) {
-  const [form, setForm] = useState({
-    name: '',
-    sku: '',
-    category: 'Materials',
-    stock: 0,
-  });
+  const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -45,10 +42,27 @@ export default function InventoryModal({ mode, item, onClose, onSave, onDelete }
         stock: item.stock,
       });
     } else {
-      setForm({ name: '', sku: '', category: 'Materials', stock: 0 });
+      setForm(INITIAL_FORM);
     }
     setErrors({});
   }, [item, mode]);
+
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setForm((p) => ({ ...p, name: e.target.value })),
+    []
+  );
+  const handleSkuChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setForm((p) => ({ ...p, sku: e.target.value.toUpperCase() })),
+    []
+  );
+  const handleCategoryChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => setForm((p) => ({ ...p, category: e.target.value })),
+    []
+  );
+  const handleStockChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => setForm((p) => ({ ...p, stock: parseInt(e.target.value) || 0 })),
+    []
+  );
 
   if (!mode) return null;
 
@@ -135,7 +149,7 @@ export default function InventoryModal({ mode, item, onClose, onSave, onDelete }
                 <input
                   type="text"
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={handleNameChange}
                   placeholder="e.g. Steel Pipes"
                   className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition ${errors.name ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                 />
@@ -150,7 +164,7 @@ export default function InventoryModal({ mode, item, onClose, onSave, onDelete }
                 <input
                   type="text"
                   value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value.toUpperCase() })}
+                  onChange={handleSkuChange}
                   placeholder="e.g. SP-001"
                   className={`w-full px-3 py-2 border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-teal-500 transition ${errors.sku ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                 />
@@ -163,7 +177,7 @@ export default function InventoryModal({ mode, item, onClose, onSave, onDelete }
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                   <select
                     value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    onChange={handleCategoryChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
                   >
                     {CATEGORIES.map((cat) => (
@@ -180,7 +194,7 @@ export default function InventoryModal({ mode, item, onClose, onSave, onDelete }
                     type="number"
                     min="0"
                     value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: parseInt(e.target.value) || 0 })}
+                    onChange={handleStockChange}
                     className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition ${errors.stock ? 'border-red-400 bg-red-50' : 'border-gray-300'}`}
                   />
                   {errors.stock && <p className="text-red-500 text-xs mt-1">{errors.stock}</p>}
