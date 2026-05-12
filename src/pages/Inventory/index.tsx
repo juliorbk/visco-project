@@ -3,12 +3,15 @@ import Modal from "../../components/Modal";
 import ProductForm from "../../components/ProductForm";
 import { getProducts, createProduct, updateProduct, deleteProduct } from "../../api/products";
 import client from "../../api/client";
+import { useAuth } from "../../contexts/AuthContext";
 import type { ProductResponse, ProductRequest, SupplierOption, CategoryOption } from "../../index";
 import { UOM_LABELS } from "../../utils/labels";
 
 const PRIMARY = "#7B1A1A";
 
 export default function ProductsPage() {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole("ADMIN");
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -103,16 +106,18 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
           <p className="text-sm text-gray-400 mt-0.5">Gestiona el catálogo de productos del inventario.</p>
         </div>
-        <button
-          onClick={() => { setSelected(null); setModalMode("create"); }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
-          style={{ background: PRIMARY }}
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          Nuevo Producto
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => { setSelected(null); setModalMode("create"); }}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
+            style={{ background: PRIMARY }}
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            Nuevo Producto
+          </button>
+        )}
       </div>
 
       {/* Table card */}
@@ -176,21 +181,25 @@ export default function ProductsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => { setSelected(p); setModalMode("edit"); }}
-                          className="text-xs font-semibold hover:underline"
-                          style={{ color: PRIMARY }}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => { setSelected(p); setModalMode("delete"); }}
-                          className="text-xs font-semibold text-red-500 hover:underline"
-                        >
-                          Eliminar
-                        </button>
-                      </div>
+                      {isAdmin ? (
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => { setSelected(p); setModalMode("edit"); }}
+                            className="text-xs font-semibold hover:underline"
+                            style={{ color: PRIMARY }}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => { setSelected(p); setModalMode("delete"); }}
+                            className="text-xs font-semibold text-red-500 hover:underline"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-300">—</span>
+                      )}
                     </td>
                   </tr>
                 ))

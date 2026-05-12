@@ -29,10 +29,10 @@ export default function DashboardPage() {
   const recentOrders = orders.slice(0, 5);
 
   const kpis = [
-    { label: "Total Órdenes", value: orders.length, icon: "🛒", delta: "", color: "#7B1A1A" },
-    { label: "Pendientes de Aprobación", value: pending, icon: "⏳", color: "#F59E0B" },
-    { label: "Aprobadas / En Curso", value: approved, icon: "✅", color: "#10B981" },
-    { label: "Productos Activos", value: activeProducts, icon: "📦", color: "#6366F1" },
+    { label: "Total Orders", value: orders.length, icon: "🛒", delta: "", color: "#7B1A1A" },
+    { label: "Pending Approval", value: pending, icon: "⏳", color: "#F59E0B" },
+    { label: "Approved / In Progress", value: approved, icon: "✅", color: "#10B981" },
+    { label: "Active Products", value: activeProducts, icon: "📦", color: "#6366F1" },
   ];
 
   return (
