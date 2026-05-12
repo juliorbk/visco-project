@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
-import Modal from "../../components/Modal";
-import PurchaseOrderForm from "../../components/PurchaseOrderForm";
-import ReceiveGoodsModal from "../../components/ReceiveGoodsModal";
+import Modal from "./components/Modal";
+import PurchaseOrderForm from "./components/PurchaseOrderForm";
+import ReceiveGoodsModal from "./components/ReceiveGoodsModal";
 import {
   getOrders,
+  getOrder,
   createOrder,
   approveOrder,
   cancelOrder,
   receiveGoods,
-} from "../../api/procurement";
-import client from "../../api/client";
+} from "./api/procurement";
+import client from "./api/client";
 import type {
   PurchaseOrderResponse,
   PurchaseOrderRequest,
@@ -17,12 +18,13 @@ import type {
   SupplierOption,
   ProductResponse,
   ReceiveGoodsRequest,
-} from "../../index";
+} from "./index";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_STYLE,
   STATUS_FLOW,
-} from "../../utils/labels";
+} from "./utils/labels";
+import { generatePurchaseOrderPdf } from "./utils/pdf";
 
 const PRIMARY = "#7B1A1A";
 
@@ -43,6 +45,7 @@ export default function PurchaseOrdersPage() {
   const [createModal, setCreateModal] = useState(false);
   const [detailOrder, setDetailOrder] = useState<PurchaseOrderResponse | null>(null);
   const [receiveOrder, setReceiveOrder] = useState<PurchaseOrderResponse | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -108,6 +111,18 @@ export default function PurchaseOrdersPage() {
       fetchOrders();
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDownloadPdf = async (orderId: number) => {
+    setDownloadingPdf(true);
+    try {
+      const fresh = await getOrder(orderId);
+      generatePurchaseOrderPdf(fresh);
+    } catch {
+      alert("Error al obtener los datos de la orden. Intenta de nuevo.");
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -369,6 +384,13 @@ export default function PurchaseOrdersPage() {
                   Cancelar Orden
                 </button>
               )}
+              <button
+                onClick={() => handleDownloadPdf(detailOrder.id)}
+                disabled={downloadingPdf}
+                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {downloadingPdf ? "Generando PDF…" : "Descargar PDF"}
+              </button>
               <button onClick={() => setDetailOrder(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Cerrar
               </button>
@@ -388,5 +410,3 @@ export default function PurchaseOrdersPage() {
     </div>
   );
 }
-
-

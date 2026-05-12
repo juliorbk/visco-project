@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { login } from "../../api/auth";
+import { login } from "./api/auth";
 
 const PRIMARY = "#7B1A1A";
 const PRIMARY_DARK = "#5C1212";

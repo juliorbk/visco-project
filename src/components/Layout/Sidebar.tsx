@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 
 const menuItems = [
   {
-    path: "/",
+    path: "/dashboard",
     label: "Dashboard",
     icon: (
       <svg
@@ -23,8 +23,8 @@ const menuItems = [
     ),
   },
   {
-    path: "/inventory",
-    label: "Inventory",
+    path: "/products",
+    label: "Productos",
     icon: (
       <svg
         width="18"
@@ -36,14 +36,14 @@ const menuItems = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <rect x="2" y="3" width="20" height="14" rx="2" />
-        <path d="M8 21h8M12 17v4" />
+        <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
       </svg>
     ),
   },
   {
-    path: "/procurement",
-    label: "Procurement",
+    path: "/procurement/orders",
+    label: "Órdenes de Compra",
     icon: (
       <svg
         width="18"
@@ -63,7 +63,7 @@ const menuItems = [
   },
   {
     path: "/suppliers",
-    label: "Suppliers",
+    label: "Proveedores",
     icon: (
       <svg
         width="18"
@@ -83,7 +83,7 @@ const menuItems = [
   },
   {
     path: "/reports",
-    label: "Reports",
+    label: "Reportes",
     icon: (
       <svg
         width="18"
@@ -133,12 +133,12 @@ export default function Sidebar() {
       {/* New Purchase Order Button */}
       <div className="px-4 mb-5">
         <NavLink
-          to="/procurement"
+          to="/procurement/orders"
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-white text-sm font-medium transition-opacity hover:opacity-90"
           style={{ background: "#7B1A1A" }}
         >
           <span className="text-lg leading-none">+</span>
-          <span>New Purchase Order</span>
+          <span>Nueva Orden</span>
         </NavLink>
       </div>
 

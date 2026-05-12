@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 const PRIMARY = "#7B1A1A";
-const PRIMARY_LIGHT = "#FDF0F0";
 
 interface Supplier {
   id: number;

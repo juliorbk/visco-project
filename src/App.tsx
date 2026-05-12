@@ -1,29 +1,36 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "./components/Layout/Layout";
-import Dashboard from "./pages/Dashboard";
-import Inventory from "./pages/Inventory";
-import Procurement from "./pages/Procurement";
-import Reports from "./pages/Reports";
-import Suppliers from "./pages/Suppliers";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import LoginPage from "./LoginPage";
+import DashboardPage from "./pages/Dashboard";
+import ProductsPage from "./pages/Inventory";
+import PurchaseOrdersPage from "./PurchaseOrdersPage";
+import SuppliersPage from "./pages/Suppliers";
+import ReportsPage from "./pages/Reports";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta pública (sin Layout) */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Public */}
+        <Route path="/login" element={<LoginPage />} />
 
-        {/* Rutas privadas (envueltas en el Layout con el menú lateral) */}
-        <Route element={<Layout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/procurement" element={<Procurement />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/suppliers" element={<Suppliers />} />
+        {/* Protected (require token) */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/inventory" element={<ProductsPage />} />
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/procurement" element={<Navigate to="/procurement/orders" replace />} />
+            <Route path="/procurement/orders" element={<PurchaseOrdersPage />} />
+            <Route path="/suppliers" element={<SuppliersPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+          </Route>
         </Route>
+
+        {/* Redirects */}
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );
