@@ -1,9 +1,19 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import type { UserRole } from "../../index";
 
-const menuItems = [
+interface MenuItem {
+  path: string;
+  label: string;
+  roles: readonly UserRole[];
+  icon: JSX.Element;
+}
+
+const menuItems: MenuItem[] = [
   {
     path: "/dashboard",
     label: "Dashboard",
+    roles: ["ADMIN", "MANAGER", "PROCUREMENT", "WAREHOUSEMAN"] as const,
     icon: (
       <svg
         width="18"
@@ -25,6 +35,7 @@ const menuItems = [
   {
     path: "/products",
     label: "Productos",
+    roles: ["ADMIN", "MANAGER", "PROCUREMENT", "WAREHOUSEMAN"] as const,
     icon: (
       <svg
         width="18"
@@ -44,6 +55,7 @@ const menuItems = [
   {
     path: "/procurement/orders",
     label: "Órdenes de Compra",
+    roles: ["ADMIN", "MANAGER", "PROCUREMENT", "WAREHOUSEMAN"] as const,
     icon: (
       <svg
         width="18"
@@ -64,6 +76,7 @@ const menuItems = [
   {
     path: "/suppliers",
     label: "Proveedores",
+    roles: ["ADMIN", "MANAGER", "PROCUREMENT"] as const,
     icon: (
       <svg
         width="18"
@@ -84,6 +97,7 @@ const menuItems = [
   {
     path: "/reports",
     label: "Reportes",
+    roles: ["ADMIN", "MANAGER"] as const,
     icon: (
       <svg
         width="18"
@@ -104,6 +118,10 @@ const menuItems = [
 ];
 
 export default function Sidebar() {
+  const { hasRole } = useAuth();
+  const visible = menuItems.filter((item) => hasRole(...item.roles));
+  const canCreateOrder = hasRole("ADMIN", "MANAGER", "PROCUREMENT");
+
   return (
     <div
       className="w-56 bg-white border-r border-gray-100 flex flex-col"
@@ -131,20 +149,22 @@ export default function Sidebar() {
       </div>
 
       {/* New Purchase Order Button */}
-      <div className="px-4 mb-5">
-        <NavLink
-          to="/procurement/orders"
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-white text-sm font-medium transition-opacity hover:opacity-90"
-          style={{ background: "#7B1A1A" }}
-        >
-          <span className="text-lg leading-none">+</span>
-          <span>Nueva Orden</span>
-        </NavLink>
-      </div>
+      {canCreateOrder && (
+        <div className="px-4 mb-5">
+          <NavLink
+            to="/procurement/orders"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-white text-sm font-medium transition-opacity hover:opacity-90"
+            style={{ background: "#7B1A1A" }}
+          >
+            <span className="text-lg leading-none">+</span>
+            <span>Nueva Orden</span>
+          </NavLink>
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5">
-        {menuItems.map((item) => (
+        {visible.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
