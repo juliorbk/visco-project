@@ -4,6 +4,7 @@ import { getOrders } from "../../api/procurement";
 import { getProducts } from "../../api/products";
 import type { PurchaseOrderResponse, ProductResponse } from "../../index";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLE } from "../../utils/labels";
+import { ShoppingCartIcon, ClockIcon, CheckCircleIcon, ArchiveBoxIcon } from "@heroicons/react/24/outline";
 
 const PRIMARY = "#7B1A1A";
 
@@ -29,10 +30,10 @@ export default function DashboardPage() {
   const recentOrders = orders.slice(0, 5);
 
   const kpis = [
-    { label: "Total Orders", value: orders.length, icon: "🛒", delta: "", color: "#7B1A1A" },
-    { label: "Pending Approval", value: pending, icon: "⏳", color: "#F59E0B" },
-    { label: "Approved / In Progress", value: approved, icon: "✅", color: "#10B981" },
-    { label: "Active Products", value: activeProducts, icon: "📦", color: "#6366F1" },
+    { label: "Total Orders", value: orders.length, icon: ShoppingCartIcon, color: "#7B1A1A" },
+    { label: "Pending Approval", value: pending, icon: ClockIcon, color: "#F59E0B" },
+    { label: "Approved / In Progress", value: approved, icon: CheckCircleIcon, color: "#10B981" },
+    { label: "Active Products", value: activeProducts, icon: ArchiveBoxIcon, color: "#6366F1" },
   ];
 
   return (
@@ -46,7 +47,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((k) => (
           <div key={k.label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="text-2xl mb-2">{k.icon}</div>
+            <div className="mb-2"><k.icon className="w-6 h-6" /></div>
             <div className="text-xs text-gray-400 mb-1">{k.label}</div>
             <div className="text-3xl font-bold" style={{ color: k.color }}>
               {loading ? <span className="text-gray-200 animate-pulse">—</span> : k.value}
@@ -103,14 +104,14 @@ export default function DashboardPage() {
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-4">
         <Link to="/products" className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: "#FDF0F0" }}>📦</div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#FDF0F0" }}><ArchiveBoxIcon className="w-6 h-6" style={{ color: PRIMARY }} /></div>
           <div>
             <div className="font-semibold text-gray-900 group-hover:underline">Gestionar Productos</div>
             <div className="text-sm text-gray-400">{activeProducts} productos activos</div>
           </div>
         </Link>
         <Link to="/procurement/orders" className="flex items-center gap-4 bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: "#FDF0F0" }}>🛒</div>
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#FDF0F0" }}><ShoppingCartIcon className="w-6 h-6" style={{ color: PRIMARY }} /></div>
           <div>
             <div className="font-semibold text-gray-900 group-hover:underline">Órdenes de Compra</div>
             <div className="text-sm text-gray-400">{pending} pendientes de aprobación</div>

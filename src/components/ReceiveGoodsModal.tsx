@@ -1,6 +1,7 @@
 import { useState, memo } from "react";
 import Modal from "./Modal";
 import type { PurchaseOrderResponse, ReceiveGoodsRequest } from "../index";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 const PRIMARY = "#7B1A1A";
 
@@ -101,7 +102,7 @@ const ReceiveGoodsModal = memo(function ReceiveGoodsModal({
           {/* Diff summary */}
           {order.items.some((item) => getQty(item.productId, item.quantity) !== item.quantity) && (
             <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-700">
-              ⚠️ Hay diferencias entre las cantidades esperadas y recibidas. La orden quedará como <strong>Parcialmente Entregada</strong> si no cuadran todos los ítems.
+              <ExclamationTriangleIcon className="w-4 h-4 inline align-text-bottom mr-1" /> Hay diferencias entre las cantidades esperadas y recibidas. La orden quedará como <strong>Parcialmente Entregada</strong> si no cuadran todos los ítems.
             </div>
           )}
 

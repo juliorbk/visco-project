@@ -56,3 +56,19 @@ export async function receiveGoods(
   );
   return res.data;
 }
+
+export async function getGoodsReceipts(): Promise<ReceiveGoodsResponse[]> {
+  const res = await client.get<ReceiveGoodsResponse[]>(
+    "/procurement/receive-goods"
+  );
+  return res.data;
+}
+
+export async function getGoodsReceipt(
+  id: number
+): Promise<ReceiveGoodsResponse> {
+  const res = await client.get<ReceiveGoodsResponse>(
+    `/procurement/receive-goods/${id}`
+  );
+  return res.data;
+}

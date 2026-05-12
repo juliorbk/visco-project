@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "./api/auth";
+import { ArchiveBoxIcon, CheckCircleIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline";
 
 const PRIMARY = "#7B1A1A";
 const PRIMARY_DARK = "#5C1212";
@@ -73,12 +74,12 @@ export default function LoginPage() {
 
         <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", gap:10 }}>
           {[
-            { icon:"📦", label:"Inventario activo", value:"45,910 unidades" },
-            { icon:"✅", label:"Tasa de cumplimiento", value:"98.2%" },
-            { icon:"🤝", label:"Proveedores activos", value:"89 empresas" },
+            { icon:<ArchiveBoxIcon className="w-5 h-5 text-white/80" />, label:"Inventario activo", value:"45,910 unidades" },
+            { icon:<CheckCircleIcon className="w-5 h-5 text-white/80" />, label:"Tasa de cumplimiento", value:"98.2%" },
+            { icon:<BuildingOffice2Icon className="w-5 h-5 text-white/80" />, label:"Proveedores activos", value:"89 empresas" },
           ].map((s) => (
             <div key={s.label} className="flex items-center gap-3 p-3 rounded-xl" style={{ background:"rgba(255,255,255,0.1)", border:"1px solid rgba(255,255,255,0.12)" }}>
-              <span style={{ fontSize:18 }}>{s.icon}</span>
+              <span style={{ display:"flex" }}>{s.icon}</span>
               <div>
                 <div style={{ fontSize:10, color:"rgba(255,255,255,0.5)", textTransform:"uppercase", letterSpacing:"0.08em" }}>{s.label}</div>
                 <div style={{ fontSize:13, fontWeight:600, color:"#fff" }}>{s.value}</div>

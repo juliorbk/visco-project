@@ -26,6 +26,7 @@ import {
   STATUS_FLOW,
 } from "./utils/labels";
 import { generatePurchaseOrderPdf } from "./utils/pdf";
+import { CheckIcon } from "@heroicons/react/24/outline";
 
 const PRIMARY = "#7B1A1A";
 
@@ -308,7 +309,7 @@ export default function PurchaseOrdersPage() {
                           color: done || current ? "#fff" : "#9CA3AF",
                         }}
                       >
-                        {done ? "✓" : i + 1}
+                        {done ? <CheckIcon className="w-4 h-4" /> : i + 1}
                       </div>
                       <div className="text-xs mt-1 whitespace-nowrap" style={{ color: current ? s.color : "#9CA3AF", fontWeight: current ? 600 : 400 }}>
                         {ORDER_STATUS_LABELS[step]}
