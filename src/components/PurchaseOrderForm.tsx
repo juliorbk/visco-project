@@ -9,10 +9,12 @@ import { PAYMENT_METHOD_LABELS, ORDER_TYPE_LABELS } from "../utils/labels";
 
 const PRIMARY = "#7B1A1A";
 
+type FormFields = Omit<PurchaseOrderRequest, "createdById" | "items">;
+
 interface PurchaseOrderFormProps {
   suppliers: SupplierOption[];
   products: ProductResponse[];
-  onSubmit: (data: PurchaseOrderRequest) => Promise<void>;
+  onSubmit: (data: Omit<PurchaseOrderRequest, "createdById">) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
 }
@@ -26,7 +28,7 @@ const PurchaseOrderForm = memo(function PurchaseOrderForm({
   onCancel,
   loading,
 }: PurchaseOrderFormProps) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormFields>({
     orderNumber: "",
     description: "",
     supplierId: 0,
@@ -36,7 +38,7 @@ const PurchaseOrderForm = memo(function PurchaseOrderForm({
   const [items, setItems] = useState<PurchaseOrderItemRequest[]>([{ ...EMPTY_ITEM }]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const setField = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const setField = (field: keyof FormFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
     setForm((f) => ({ ...f, [field]: field === "supplierId" ? Number(val) : val }));
     setErrors((er) => ({ ...er, [field]: "" }));

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import Modal from "./components/Modal";
 import PurchaseOrderForm from "./components/PurchaseOrderForm";
 import ReceiveGoodsModal from "./components/ReceiveGoodsModal";
@@ -8,8 +9,8 @@ import {
   createOrder,
   approveOrder,
   cancelOrder,
-  receiveGoods,
 } from "./api/procurement";
+import { receiveGoods } from "./api/warehouse";
 import client from "./api/client";
 import { useAuth } from "./contexts/AuthContext";
 import type {
@@ -26,6 +27,7 @@ import {
   STATUS_FLOW,
 } from "./utils/labels";
 import { generatePurchaseOrderPdf } from "./utils/pdf";
+import { getSuppliers } from "./api/suppliers";
 import { CheckIcon } from "@heroicons/react/24/outline";
 
 const PRIMARY = "#7B1A1A";
@@ -36,7 +38,8 @@ const ALL_STATUSES: PurchaseOrderStatus[] = [
 ];
 
 export default function PurchaseOrdersPage() {
-  const { hasRole } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { hasRole, user } = useAuth();
   const canCreate = hasRole("ADMIN", "MANAGER", "PROCUREMENT");
   const canApprove = hasRole("ADMIN", "MANAGER");
   const canCancel = hasRole("ADMIN", "MANAGER");
@@ -67,24 +70,35 @@ export default function PurchaseOrdersPage() {
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   useEffect(() => {
-    client.get("/suppliers").then((r) => setSuppliers(r.data)).catch(() =>
-      setSuppliers([{ id: 1, name: "Proveedor Demo" }])
+    const orderId = searchParams.get("orderId");
+    if (orderId) {
+      setSearchParams({}, { replace: true });
+      getOrder(Number(orderId)).then(setDetailOrder).catch(() => {});
+    }
+  }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    getSuppliers().then((data) => setSuppliers(data.filter((s) => s.active))).catch(() =>
+      setSuppliers([{ id: 1, name: "Proveedor Demo", active: true }])
     );
     client.get("/inventory/products", { params: { page: 0, size: 100 } })
-      .then((r) => setProducts(r.data.content ?? r.data))
+      .then((r) => {
+        const all: ProductResponse[] = r.data.content ?? r.data;
+        setProducts(all.filter((p) => p.active));
+      })
       .catch(() => setProducts([]));
   }, []);
 
-  const handleCreate = useCallback(async (data: PurchaseOrderRequest) => {
+  const handleCreate = useCallback(async (data: Omit<PurchaseOrderRequest, "createdById">) => {
     setSaving(true);
     try {
-      await createOrder(data);
+      await createOrder({ ...data, createdById: user!.id });
       setCreateModal(false);
       fetchOrders();
     } finally {
       setSaving(false);
     }
-  }, [fetchOrders]);
+  }, [fetchOrders, user]);
 
   const handleApprove = useCallback(async (id: number) => {
     setSaving(true);
@@ -197,7 +211,7 @@ export default function PurchaseOrdersPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-50">
-              {["N° Orden", "Proveedor", "Descripción", "Fecha", "Estado", "Ítems", "Acciones"].map((h) => (
+              {["N° Orden", "Proveedor", "Descripción", "Fecha", "Creado por", "Estado", "Ítems", "Acciones"].map((h) => (
                 <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -205,7 +219,7 @@ export default function PurchaseOrdersPage() {
           <tbody className="divide-y divide-gray-50">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center">
+                <td colSpan={8} className="px-5 py-12 text-center">
                   <div className="flex items-center justify-center gap-2 text-gray-400">
                     <div className="w-4 h-4 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
                     Cargando órdenes…
@@ -214,7 +228,7 @@ export default function PurchaseOrdersPage() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-sm text-gray-400">
+                <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-400">
                   No hay órdenes con el filtro seleccionado.
                 </td>
               </tr>
@@ -227,6 +241,7 @@ export default function PurchaseOrdersPage() {
                     <td className="px-5 py-3.5 text-sm text-gray-700">{order.supplierName}</td>
                     <td className="px-5 py-3.5 text-sm text-gray-500 max-w-xs truncate">{order.description}</td>
                     <td className="px-5 py-3.5 text-sm text-gray-500 whitespace-nowrap">{formatDate(order.createdAt)}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-600">{order.createdBy}</td>
                     <td className="px-5 py-3.5">
                       <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full" style={{ background: s.bg, color: s.color }}>
                         <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.dot }} />
@@ -324,9 +339,10 @@ export default function PurchaseOrdersPage() {
             </div>
 
             {/* Info grid */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-3">
               {[
                 { label: "Proveedor", value: detailOrder.supplierName },
+                { label: "Creado por", value: detailOrder.createdBy },
                 { label: "Fecha de creación", value: formatDate(detailOrder.createdAt) },
                 { label: "Estado actual", value: ORDER_STATUS_LABELS[detailOrder.status] },
               ].map(({ label, value }) => (

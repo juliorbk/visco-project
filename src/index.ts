@@ -108,6 +108,7 @@ export interface PurchaseOrderRequest {
   supplierId: number;
   paymentMethod: PaymentMethod;
   type: PurchaseOrderType;
+  createdById: string;
   items: PurchaseOrderItemRequest[];
 }
 
@@ -126,6 +127,9 @@ export interface PurchaseOrderResponse {
   description: string;
   status: PurchaseOrderStatus;
   supplierName: string;
+  paymentMethod: PaymentMethod;
+  type: PurchaseOrderType;
+  createdBy: string;
   createdAt: string;
   items: PurchaseOrderItemResponse[];
 }
@@ -164,6 +168,30 @@ export interface ReceiveGoodsResponse {
 export interface SupplierOption {
   id: number;
   name: string;
+  active: boolean;
+}
+
+export interface SupplierResponse {
+  id: number;
+  name: string;
+  description: string;
+  address: string;
+  currency: string;
+  contactEmail: string;
+  phoneNumbers: string[];
+  active: boolean;
+  sapCode: string;
+  representatives: { id: number; fullName: string }[];
+}
+
+export interface SupplierRequest {
+  name: string;
+  description: string;
+  address: string;
+  currency: string;
+  email: string;
+  phoneNumbers: string[];
+  sapCode: string;
 }
 
 export interface CategoryOption {

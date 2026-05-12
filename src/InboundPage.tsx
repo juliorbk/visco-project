@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "./components/Modal";
-import { getGoodsReceipts, getOrder } from "./api/procurement";
+import { getGoodsReceipts } from "./api/warehouse";
+import { getOrder } from "./api/procurement";
 import type { ReceiveGoodsResponse, PurchaseOrderResponse } from "./index";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLE } from "./utils/labels";
 
 const PRIMARY = "#7B1A1A";
 
 export default function InboundPage() {
+  const navigate = useNavigate();
   const [receipts, setReceipts] = useState<ReceiveGoodsResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -18,7 +21,7 @@ export default function InboundPage() {
     setLoading(true);
     try {
       const data = await getGoodsReceipts();
-      setReceipts(data);
+      setReceipts(Array.isArray(data) ? data : (data as any).content ?? []);
     } finally {
       setLoading(false);
     }
@@ -291,21 +294,30 @@ export default function InboundPage() {
                     {linkedOrder.orderNumber} — {linkedOrder.supplierName}
                   </div>
                 </div>
-                <span
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full"
-                  style={{
-                    background: ORDER_STATUS_STYLE[linkedOrder.status].bg,
-                    color: ORDER_STATUS_STYLE[linkedOrder.status].color,
-                  }}
-                >
+                <div className="flex items-center gap-2">
                   <span
-                    className="w-1.5 h-1.5 rounded-full"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full"
                     style={{
-                      background: ORDER_STATUS_STYLE[linkedOrder.status].dot,
+                      background: ORDER_STATUS_STYLE[linkedOrder.status].bg,
+                      color: ORDER_STATUS_STYLE[linkedOrder.status].color,
                     }}
-                  />
-                  {ORDER_STATUS_LABELS[linkedOrder.status]}
-                </span>
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{
+                        background: ORDER_STATUS_STYLE[linkedOrder.status].dot,
+                      }}
+                    />
+                    {ORDER_STATUS_LABELS[linkedOrder.status]}
+                  </span>
+                  <button
+                    onClick={() => navigate(`/procurement/orders?orderId=${linkedOrder.id}`)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors hover:opacity-90"
+                    style={{ background: PRIMARY }}
+                  >
+                    Ir a la Orden
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="text-sm text-gray-400">
