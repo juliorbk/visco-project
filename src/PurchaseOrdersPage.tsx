@@ -11,6 +11,7 @@ import {
   receiveGoods,
 } from "./api/procurement";
 import client from "./api/client";
+import { useAuth } from "./contexts/AuthContext";
 import type {
   PurchaseOrderResponse,
   PurchaseOrderRequest,
@@ -34,6 +35,11 @@ const ALL_STATUSES: PurchaseOrderStatus[] = [
 ];
 
 export default function PurchaseOrdersPage() {
+  const { hasRole } = useAuth();
+  const canCreate = hasRole("ADMIN", "MANAGER", "PROCUREMENT");
+  const canApprove = hasRole("ADMIN", "MANAGER");
+  const canCancel = hasRole("ADMIN", "MANAGER");
+  const canReceive = hasRole("ADMIN", "PROCUREMENT", "WAREHOUSEMAN");
   const [orders, setOrders] = useState<PurchaseOrderResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -142,16 +148,18 @@ export default function PurchaseOrdersPage() {
           <h1 className="text-2xl font-bold text-gray-900">Órdenes de Compra</h1>
           <p className="text-sm text-gray-400 mt-0.5">Gestiona, aprueba y rastrea las órdenes de compra.</p>
         </div>
-        <button
-          onClick={() => setCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
-          style={{ background: PRIMARY }}
-        >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          Nueva Orden
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
+            style={{ background: PRIMARY }}
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            Nueva Orden
+          </button>
+        )}
       </div>
 
       {/* Status filter tabs */}
@@ -234,7 +242,7 @@ export default function PurchaseOrdersPage() {
                         >
                           Ver
                         </button>
-                        {order.status === "PENDING" && (
+                        {order.status === "PENDING" && canApprove && (
                           <button
                             onClick={() => handleApprove(order.id)}
                             className="text-xs font-semibold text-blue-600 hover:underline"
@@ -242,7 +250,7 @@ export default function PurchaseOrdersPage() {
                             Aprobar
                           </button>
                         )}
-                        {(order.status === "APPROVED" || order.status === "IN_TRANSIT") && (
+                        {(order.status === "APPROVED" || order.status === "IN_TRANSIT") && canReceive && (
                           <button
                             onClick={() => setReceiveOrder(order)}
                             className="text-xs font-semibold text-green-600 hover:underline"
@@ -250,7 +258,7 @@ export default function PurchaseOrdersPage() {
                             Recibir
                           </button>
                         )}
-                        {(order.status === "PENDING" || order.status === "APPROVED") && (
+                        {(order.status === "PENDING" || order.status === "APPROVED") && canCancel && (
                           <button
                             onClick={() => handleCancel(order.id)}
                             className="text-xs font-semibold text-red-500 hover:underline"
@@ -365,12 +373,12 @@ export default function PurchaseOrdersPage() {
 
             {/* Actions in modal */}
             <div className="flex gap-3 pt-1">
-              {detailOrder.status === "PENDING" && (
+              {detailOrder.status === "PENDING" && canApprove && (
                 <button onClick={() => { handleApprove(detailOrder.id); setDetailOrder(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: "#3B82F6" }}>
                   Aprobar Orden
                 </button>
               )}
-              {(detailOrder.status === "APPROVED" || detailOrder.status === "IN_TRANSIT") && (
+              {(detailOrder.status === "APPROVED" || detailOrder.status === "IN_TRANSIT") && canReceive && (
                 <button
                   onClick={() => { setReceiveOrder(detailOrder); setDetailOrder(null); }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
@@ -379,7 +387,7 @@ export default function PurchaseOrdersPage() {
                   Recibir Mercancía
                 </button>
               )}
-              {(detailOrder.status === "PENDING" || detailOrder.status === "APPROVED") && (
+              {(detailOrder.status === "PENDING" || detailOrder.status === "APPROVED") && canCancel && (
                 <button onClick={() => { handleCancel(detailOrder.id); setDetailOrder(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700">
                   Cancelar Orden
                 </button>
