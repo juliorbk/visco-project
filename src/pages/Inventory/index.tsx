@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Modal from "../../components/Modal";
 import ProductForm from "../../components/ProductForm";
 import { getProducts, createProduct, updateProduct, deleteProduct, activateProduct } from "../../api/products";
 import { getSuppliers } from "../../api/suppliers";
+import { getProductStockBreakdown } from "../../api/warehouse";
 import client from "../../api/client";
 import { useAuth } from "../../contexts/AuthContext";
-import type { ProductResponse, ProductRequest, SupplierOption, CategoryOption } from "../../index";
+import type { ProductResponse, ProductRequest, SupplierOption, CategoryOption, ProductStockBreakdown } from "../../index";
 import { UOM_LABELS } from "../../utils/labels";
 
 const PRIMARY = "#7B1A1A";
@@ -26,6 +27,9 @@ export default function ProductsPage() {
 
   const [modalMode, setModalMode] = useState<"create" | "edit" | "deactivate" | null>(null);
   const [selected, setSelected] = useState<ProductResponse | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [stockBreakdowns, setStockBreakdowns] = useState<Record<number, ProductStockBreakdown>>({});
+  const [loadingBreakdown, setLoadingBreakdown] = useState(false);
 
   const PAGE_SIZE = 10;
 
@@ -145,7 +149,7 @@ export default function ProductsPage() {
               className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-100 focus:border-red-300"
             />
           </div>
-          <span className="text-xs text-gray-400">{total} productos</span>
+          <span className="text-xs text-gray-400">{total} productos · Stock total: {products.reduce((s, p) => s + p.totalStock, 0)}</span>
         </div>
 
         {/* Table */}
@@ -153,7 +157,7 @@ export default function ProductsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-50">
-                {["Código Interno", "SKU", "Nombre", "Categoría", "UOM", "Stock Total", "Proveedor", "Estado", "Acciones"].map((h) => (
+                {["", "Código Interno", "SKU", "Nombre", "Categoría", "UOM", "Stock Total", "Stock Pend.", "Proveedor", "Estado", "Acciones"].map((h) => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -161,7 +165,7 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-5 py-12 text-center">
+                  <td colSpan={11} className="px-5 py-12 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-400">
                       <div className="w-4 h-4 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
                       Cargando productos…
@@ -170,76 +174,137 @@ export default function ProductsPage() {
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-400">
+                  <td colSpan={11} className="px-5 py-12 text-center text-sm text-gray-400">
                     No se encontraron productos.
                   </td>
                 </tr>
               ) : (
                 products.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-5 py-3.5 text-xs font-mono font-semibold" style={{ color: PRIMARY }}>{p.internalCode}</td>
-                    <td className="px-5 py-3.5 text-xs font-mono text-gray-500">{p.sku}</td>
-                    <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{p.name}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-500">{p.categoryName}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-500">{UOM_LABELS[p.uom]}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center gap-1.5 text-sm font-semibold ${p.totalStock <= p.reorderPoint ? "text-red-600" : "text-gray-900"}`}>
-                        {p.totalStock}
-                        {p.totalStock <= p.reorderPoint && (
-                          <svg width="14" height="14" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24" aria-label="Stock bajo">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        )}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-sm text-gray-500">{p.supplierName}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ${p.active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${p.active ? "bg-green-500" : "bg-gray-400"}`} />
-                        {p.active ? "Activo" : "Inactivo"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      {isAdmin ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => { setSelected(p); setModalMode("edit"); }}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm"
-                            style={{ background: "#6366F1" }}
+                  <React.Fragment key={p.id}>
+                    <tr className="hover:bg-gray-50/60 transition-colors">
+                      <td className="px-2 py-3.5">
+                        <button
+                          onClick={async () => {
+                            if (expandedId === p.id) {
+                              setExpandedId(null);
+                              return;
+                            }
+                            setExpandedId(p.id);
+                            if (!stockBreakdowns[p.id]) {
+                              setLoadingBreakdown(true);
+                              try {
+                                const data = await getProductStockBreakdown(p.id);
+                                setStockBreakdowns((prev) => ({ ...prev, [p.id]: data }));
+                              } catch {}
+                              setLoadingBreakdown(false);
+                            }
+                          }}
+                          className="p-1 rounded hover:bg-gray-100 transition-colors"
+                        >
+                          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
+                            className={`transition-transform ${expandedId === p.id ? "rotate-90" : ""}`}
                           >
-                            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </td>
+                      <td className="px-5 py-3.5 text-xs font-mono font-semibold" style={{ color: PRIMARY }}>{p.internalCode}</td>
+                      <td className="px-5 py-3.5 text-xs font-mono text-gray-500">{p.sku}</td>
+                      <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{p.name}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-500">{p.categoryName}</td>
+                      <td className="px-5 py-3.5 text-sm text-gray-500">{UOM_LABELS[p.uom]}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex items-center gap-1.5 text-sm font-semibold ${p.totalStock <= p.reorderPoint ? "text-red-600" : "text-gray-900"}`}>
+                          {p.totalStock}
+                          {p.totalStock <= p.reorderPoint && (
+                            <svg width="14" height="14" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24" aria-label="Stock bajo">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Editar
-                          </button>
-                          {p.active ? (
-                            <button
-                              onClick={() => { setSelected(p); setModalMode("deactivate"); }}
-                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm bg-red-600 hover:bg-red-700"
-                            >
-                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                              </svg>
-                              Desactivar
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleActivate(p)}
-                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm"
-                              style={{ background: "#10B981" }}
-                            >
-                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              Activar
-                            </button>
                           )}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-gray-300">—</span>
-                      )}
-                    </td>
-                  </tr>
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className="text-sm text-amber-600 font-semibold">{p.totalPendingStock}</span>
+                      </td>
+                      <td className="px-5 py-3.5 text-sm text-gray-500">{p.supplierName}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ${p.active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${p.active ? "bg-green-500" : "bg-gray-400"}`} />
+                          {p.active ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {isAdmin ? (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => { setSelected(p); setModalMode("edit"); }}
+                              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm"
+                              style={{ background: "#6366F1" }}
+                            >
+                              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                              </svg>
+                              Editar
+                            </button>
+                            {p.active ? (
+                              <button
+                                onClick={() => { setSelected(p); setModalMode("deactivate"); }}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm bg-red-600 hover:bg-red-700"
+                              >
+                                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                                Desactivar
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleActivate(p)}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:shadow-sm"
+                                style={{ background: "#10B981" }}
+                              >
+                                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Activar
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-300">—</span>
+                        )}
+                      </td>
+                    </tr>
+                    {expandedId === p.id && (
+                      <tr>
+                        <td colSpan={11} className="px-5 pb-3">
+                          {loadingBreakdown && !stockBreakdowns[p.id] ? (
+                            <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                              <div className="w-3 h-3 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
+                              Cargando stock por almacén…
+                            </div>
+                          ) : stockBreakdowns[p.id]?.warehouses.length === 0 ? (
+                            <div className="text-xs text-gray-400 py-2">Sin stock registrado por almacén.</div>
+                          ) : (
+                            <div className="bg-gray-50 rounded-xl p-3">
+                              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Stock por Almacén</div>
+                              <div className="grid gap-1.5 text-xs" style={{ gridTemplateColumns: "1fr 80px 80px" }}>
+                                <span className="font-semibold text-gray-400">Almacén</span>
+                                <span className="font-semibold text-gray-400 text-right">Físico</span>
+                                <span className="font-semibold text-gray-400 text-right">Pendiente</span>
+                                {stockBreakdowns[p.id]?.warehouses.map((w) => (
+                                  <>
+                                    <span className="text-gray-700">{w.warehouseName}</span>
+                                    <span className="text-gray-800 font-semibold text-right">{w.currentStock}</span>
+                                    <span className="text-amber-600 font-semibold text-right">{w.pendingStock}</span>
+                                  </>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))
               )}
             </tbody>

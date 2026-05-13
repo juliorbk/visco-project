@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { getOrders } from "../../api/procurement";
 import { getProducts } from "../../api/products";
-import type { PurchaseOrderResponse, ProductResponse } from "../../index";
+import { getGlobalStockSummary } from "../../api/warehouse";
+import type { PurchaseOrderResponse, ProductResponse, WarehouseStockSummary } from "../../index";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLE } from "../../utils/labels";
-import { ShoppingCartIcon, ClockIcon, CheckCircleIcon, ArchiveBoxIcon } from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, ClockIcon, CheckCircleIcon, ArchiveBoxIcon, BuildingStorefrontIcon } from "@heroicons/react/24/outline";
 import ChartCard from "./ChartCard";
 import ExpensesBarChart from "./ExpensesBarChart";
 import ExpenseBreakdownDonut from "./ExpenseBreakdownDonut";
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const canViewOrders = hasRole(...ORDER_ROLES);
   const [orders, setOrders] = useState<PurchaseOrderResponse[]>([]);
   const [products, setProducts] = useState<ProductResponse[]>([]);
+  const [warehouseStock, setWarehouseStock] = useState<WarehouseStockSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,9 +34,13 @@ export default function DashboardPage() {
     promises.push(
       getProducts({ page: 0, size: 100 }).then((r) => r.content ?? (r as any)).catch(() => [] as ProductResponse[])
     );
-    Promise.all(promises).then(([ords, prods]) => {
+    promises.push(
+      getGlobalStockSummary().catch(() => [] as WarehouseStockSummary[])
+    );
+    Promise.all(promises).then(([ords, prods, wStock]) => {
       setOrders(ords as PurchaseOrderResponse[]);
       setProducts(prods as ProductResponse[]);
+      setWarehouseStock(wStock as WarehouseStockSummary[]);
       setLoading(false);
     });
   }, [canViewOrders]);
@@ -42,12 +48,14 @@ export default function DashboardPage() {
   const pending = orders.filter((o) => o.status === "PENDING").length;
   const inTransit = orders.filter((o) => o.status === "IN_TRANSIT").length;
   const activeProducts = products.filter((p) => p.active).length;
+  const totalStockSum = products.filter((p) => p.active).reduce((sum, p) => sum + p.totalStock, 0);
   const recentOrders = orders.slice(0, 5);
 
   const kpis = [
     { label: "Órdenes Totales", value: orders.length, icon: ShoppingCartIcon, color: "#7B1A1A" },
     { label: "Pendientes", value: pending, icon: ClockIcon, color: "#F59E0B" },
     { label: "En Tránsito", value: inTransit, icon: CheckCircleIcon, color: "#10B981" },
+    { label: "Stock Total", value: totalStockSum, icon: ArchiveBoxIcon, color: "#6366F1" },
     { label: "Productos Activos", value: activeProducts, icon: ArchiveBoxIcon, color: "#6366F1" },
   ];
 
@@ -60,7 +68,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {kpis.map((k) => (
           <div key={k.label} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <div className="mb-2"><k.icon className="w-6 h-6" style={{ color: k.color }} /></div>
@@ -71,6 +79,31 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Stock by warehouse */}
+      {warehouseStock.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+            <BuildingStorefrontIcon className="w-5 h-5 text-gray-400" />
+            <span className="font-semibold text-gray-900">Stock por Almacén</span>
+          </div>
+          <div className="p-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {warehouseStock.map((w) => (
+                <div key={w.warehouseId} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div>
+                    <div className="text-sm font-semibold text-gray-800">{w.warehouseName}</div>
+                    <div className="text-xs text-gray-400">
+                      Pendiente: <span className="text-amber-600 font-semibold">{w.totalPendingStock}</span>
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold" style={{ color: PRIMARY }}>{w.totalStock}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Modal from "./components/Modal";
 import PurchaseOrderForm from "./components/PurchaseOrderForm";
@@ -180,6 +180,24 @@ export default function PurchaseOrdersPage() {
     statusFilter === "ALL"
       ? orders
       : orders.filter((o) => o.status === statusFilter);
+
+  const stockMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const p of products) {
+      map[p.id] = p.totalStock;
+    }
+    return map;
+  }, [products]);
+
+  const receivedMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const r of detailReceipts) {
+      for (const item of r.items) {
+        map[item.productId] = (map[item.productId] || 0) + item.receivedQuantity;
+      }
+    }
+    return map;
+  }, [detailReceipts]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString("es-VE", { day: "2-digit", month: "short", year: "numeric" });
@@ -405,36 +423,53 @@ export default function PurchaseOrdersPage() {
             {/* Items */}
             <div>
               <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Ítems de la Orden</div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="pb-2 text-left text-xs text-gray-400 font-semibold">Producto</th>
-                    <th className="pb-2 text-center text-xs text-gray-400 font-semibold">SKU</th>
-                    <th className="pb-2 text-center text-xs text-gray-400 font-semibold">Cant.</th>
-                    <th className="pb-2 text-right text-xs text-gray-400 font-semibold">Precio Unit.</th>
-                    <th className="pb-2 text-right text-xs text-gray-400 font-semibold">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {detailOrder.items.map((item) => (
-                    <tr key={item.productId}>
-                      <td className="py-2 text-gray-800 font-medium">{item.productName}</td>
-                      <td className="py-2 text-center text-gray-400 font-mono text-xs">{item.productSku}</td>
-                      <td className="py-2 text-center text-gray-700">{item.quantity}</td>
-                      <td className="py-2 text-right text-gray-700">${item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                      <td className="py-2 text-right font-semibold" style={{ color: PRIMARY }}>${item.subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="pb-2 text-left text-xs text-gray-400 font-semibold">Producto</th>
+                      <th className="pb-2 text-center text-xs text-gray-400 font-semibold">SKU</th>
+                      <th className="pb-2 text-center text-xs text-gray-400 font-semibold">Stock Actual</th>
+                      <th className="pb-2 text-center text-xs text-gray-400 font-semibold">Cant. Ordenada</th>
+                      <th className="pb-2 text-center text-xs text-gray-400 font-semibold">Recibido</th>
+                      <th className="pb-2 text-center text-xs text-gray-400 font-semibold">Pendiente</th>
+                      <th className="pb-2 text-right text-xs text-gray-400 font-semibold">Precio Unit.</th>
+                      <th className="pb-2 text-right text-xs text-gray-400 font-semibold">Subtotal</th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="border-t border-gray-100">
-                    <td colSpan={4} className="pt-2 text-right text-sm font-semibold text-gray-600">Total</td>
-                    <td className="pt-2 text-right text-lg font-bold" style={{ color: PRIMARY }}>
-                      ${detailOrder.items.reduce((a, i) => a + i.subtotal, 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {detailOrder.items.map((item) => {
+                      const stock = stockMap[item.productId];
+                      const received = receivedMap[item.productId] || 0;
+                      const pending = item.quantity - received;
+                      return (
+                        <tr key={item.productId}>
+                          <td className="py-2 text-gray-800 font-medium">{item.productName}</td>
+                          <td className="py-2 text-center text-gray-400 font-mono text-xs">{item.productSku}</td>
+                          <td className="py-2 text-center text-sm font-semibold" style={{ color: stock !== undefined && stock <= 0 ? "#EF4444" : "#374151" }}>
+                            {stock !== undefined ? stock : "—"}
+                          </td>
+                          <td className="py-2 text-center text-gray-700 font-semibold">{item.quantity}</td>
+                          <td className={`py-2 text-center font-semibold ${received > 0 ? "text-blue-600" : "text-gray-400"}`}>
+                            {received > 0 ? received : "—"}
+                          </td>
+                          <td className={`py-2 text-center font-semibold ${pending > 0 ? "text-amber-600" : "text-green-600"}`}>
+                            {pending > 0 ? pending : 0}
+                          </td>
+                          <td className="py-2 text-right text-gray-700">${item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                          <td className="py-2 text-right font-semibold" style={{ color: PRIMARY }}>${item.subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-gray-100">
+                      <td colSpan={7} className="pt-2 text-right text-sm font-semibold text-gray-600">Total</td>
+                      <td className="pt-2 text-right text-lg font-bold" style={{ color: PRIMARY }}>
+                        ${detailOrder.items.reduce((a, i) => a + i.subtotal, 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
             </div>
 
             {/* Receipt history */}
@@ -560,6 +595,7 @@ export default function PurchaseOrdersPage() {
         open={!!receiveOrder}
         order={receiveOrder}
         previousReceipts={previousReceipts}
+        stockMap={stockMap}
         onClose={() => { setReceiveOrder(null); setPreviousReceipts([]); }}
         onConfirm={handleReceive}
         loading={saving}

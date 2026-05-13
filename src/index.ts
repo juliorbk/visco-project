@@ -68,11 +68,39 @@ export interface ProductResponse {
   uom: Uom;
   reorderPoint: number;
   totalStock: number;
+  totalPendingStock: number;
   active: boolean;
   supplierId: number;
   supplierName: string;
   categoryId: number;
   categoryName: string;
+}
+
+export interface WarehouseResponse {
+  id: number;
+  name: string;
+  sapCenterCode: string;
+}
+
+export interface WarehouseStockEntry {
+  warehouseId: number;
+  warehouseName: string;
+  currentStock: number;
+  pendingStock: number;
+}
+
+export interface ProductStockBreakdown {
+  productId: number;
+  totalStock: number;
+  totalPendingStock: number;
+  warehouses: WarehouseStockEntry[];
+}
+
+export interface WarehouseStockSummary {
+  warehouseId: number;
+  warehouseName: string;
+  totalStock: number;
+  totalPendingStock: number;
 }
 
 export interface ProductRequest {
