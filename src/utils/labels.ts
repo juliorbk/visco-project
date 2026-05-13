@@ -33,12 +33,10 @@ export const ORDER_TYPE_LABELS: Record<PurchaseOrderType, string> = {
 
 export const ORDER_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
   PENDING: "Pendiente",
-  APPROVED: "Aprobado",
   IN_TRANSIT: "En Tránsito",
   DELIVERED: "Entregado",
   PARTIALLY_DELIVERED: "Parcialmente Entregado",
   CANCELLED: "Cancelado",
-  REJECTED: "Rechazado",
 };
 
 export const ORDER_STATUS_STYLE: Record<
@@ -46,12 +44,10 @@ export const ORDER_STATUS_STYLE: Record<
   { bg: string; color: string; dot: string }
 > = {
   PENDING: { bg: "#FEF3C7", color: "#92400E", dot: "#F59E0B" },
-  APPROVED: { bg: "#DBEAFE", color: "#1E40AF", dot: "#3B82F6" },
   IN_TRANSIT: { bg: "#E0E7FF", color: "#3730A3", dot: "#6366F1" },
   DELIVERED: { bg: "#D1FAE5", color: "#065F46", dot: "#10B981" },
   PARTIALLY_DELIVERED: { bg: "#FEF9C3", color: "#713F12", dot: "#EAB308" },
   CANCELLED: { bg: "#F3F4F6", color: "#6B7280", dot: "#9CA3AF" },
-  REJECTED: { bg: "#FEE2E2", color: "#991B1B", dot: "#EF4444" },
 };
 
 export const ROLE_LABELS: Record<UserRole, string> = {
@@ -63,8 +59,8 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 export const STATUS_FLOW: PurchaseOrderStatus[] = [
   "PENDING",
-  "APPROVED",
   "IN_TRANSIT",
   "PARTIALLY_DELIVERED",
   "DELIVERED",
+  "CANCELLED",
 ];

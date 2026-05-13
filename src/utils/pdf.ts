@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import type { PurchaseOrderResponse } from "../index";
-import { ORDER_STATUS_LABELS } from "./labels";
+import type { PurchaseOrderResponse, ReceiveGoodsResponse } from "../index";
+import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, ORDER_TYPE_LABELS } from "./labels";
 
 const PRIMARY = "#7B1A1A";
 
@@ -55,6 +55,8 @@ export function generatePurchaseOrderPdf(order: PurchaseOrderResponse): void {
     { label: "Proveedor:", value: order.supplierName },
     { label: "Fecha:", value: formatDate(order.createdAt) },
     { label: "Estado:", value: ORDER_STATUS_LABELS[order.status] },
+    { label: "Tipo:", value: ORDER_TYPE_LABELS[order.type] },
+    { label: "Pago:", value: PAYMENT_METHOD_LABELS[order.paymentMethod] },
   ];
 
   if (order.description) {
@@ -131,4 +133,101 @@ export function generatePurchaseOrderPdf(order: PurchaseOrderResponse): void {
 
   // ── Save ──
   doc.save(`${order.orderNumber}.pdf`);
+}
+
+export function generateGoodsReceiptPdf(receipt: ReceiveGoodsResponse): void {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(22);
+  doc.setTextColor(PRIMARY);
+  doc.setFont("helvetica", "bold");
+  doc.text("VISCO ORINOCO", 14, 20);
+
+  doc.setFontSize(9);
+  doc.setTextColor("#9CA3AF");
+  doc.setFont("helvetica", "normal");
+  doc.text("Enterprise Tier", 14, 26);
+
+  doc.setFontSize(13);
+  doc.setTextColor(PRIMARY);
+  doc.setFont("helvetica", "bold");
+  doc.text("RECEPCIÓN DE MERCANCÍA", pageWidth - 14, 20, { align: "right" });
+  doc.setFontSize(11);
+  doc.setTextColor("#374151");
+  doc.setFont("helvetica", "normal");
+  doc.text(receipt.receiptNumber, pageWidth - 14, 27, { align: "right" });
+
+  doc.setDrawColor("#E5E7EB");
+  doc.line(14, 32, pageWidth - 14, 32);
+
+  const infoY = 40;
+  const infoRows: { label: string; value: string }[] = [
+    { label: "N° Recepción:", value: receipt.receiptNumber },
+    { label: "Orden de Compra:", value: receipt.orderNumber },
+    { label: "Fecha de recepción:", value: new Date(receipt.receivedAt).toLocaleDateString("es-VE", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) },
+    { label: "Estado:", value: ORDER_STATUS_LABELS[receipt.updatedStatus] },
+  ];
+
+  if (receipt.notes) {
+    infoRows.push({ label: "Notas:", value: receipt.notes });
+  }
+
+  const labelX = 14;
+  const valueX = 58;
+
+  doc.setFontSize(9);
+  infoRows.forEach((row, i) => {
+    const y = infoY + i * 6;
+    doc.setTextColor("#6B7280");
+    doc.setFont("helvetica", "bold");
+    doc.text(row.label, labelX, y);
+    doc.setTextColor("#374151");
+    doc.setFont("helvetica", "normal");
+    doc.text(row.value, valueX, y);
+  });
+
+  const tableHeadY = infoY + infoRows.length * 6 + 8;
+
+  const tableData = receipt.items.map((item) => [
+    item.productName,
+    item.productSku,
+    item.expectedQuantity.toString(),
+    item.receivedQuantity.toString(),
+    item.difference > 0 ? `+${item.difference}` : item.difference.toString(),
+  ]);
+
+  autoTable(doc, {
+    startY: tableHeadY,
+    head: [["Producto", "SKU", "Esperado", "Recibido", "Diferencia"]],
+    body: tableData,
+    theme: "grid",
+    headStyles: {
+      fillColor: PRIMARY,
+      textColor: "#fff",
+      fontStyle: "bold",
+      fontSize: 9,
+      halign: "center",
+    },
+    bodyStyles: {
+      fontSize: 8,
+      textColor: "#374151",
+    },
+    columnStyles: {
+      0: { cellWidth: 60 },
+      1: { cellWidth: 30, halign: "center" },
+      2: { cellWidth: 25, halign: "center" },
+      3: { cellWidth: 25, halign: "center" },
+      4: { cellWidth: 25, halign: "right" },
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  const footerY = doc.internal.pageSize.getHeight() - 15;
+  doc.setFontSize(7);
+  doc.setTextColor("#9CA3AF");
+  doc.setFont("helvetica", "normal");
+  doc.text(`Documento generado el: ${new Date().toLocaleString("es-VE")}`, 14, footerY);
+
+  doc.save(`${receipt.receiptNumber}.pdf`);
 }

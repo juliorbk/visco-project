@@ -5,6 +5,7 @@ import { getGoodsReceipts } from "./api/warehouse";
 import { getOrder } from "./api/procurement";
 import type { ReceiveGoodsResponse, PurchaseOrderResponse } from "./index";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLE } from "./utils/labels";
+import { generateGoodsReceiptPdf } from "./utils/pdf";
 
 const PRIMARY = "#7B1A1A";
 
@@ -327,13 +328,25 @@ export default function InboundPage() {
               </div>
             )}
 
-            {/* Close */}
-            <div className="flex gap-3 pt-1">
+            {/* Actions */}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => generateGoodsReceiptPdf(detailReceipt)}
+                className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                title="Descargar PDF"
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </button>
               <button
                 onClick={() => { setDetailReceipt(null); setLinkedOrder(null); }}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                title="Cerrar"
               >
-                Cerrar
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </button>
             </div>
           </div>

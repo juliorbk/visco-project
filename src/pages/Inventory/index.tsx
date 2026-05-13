@@ -153,7 +153,7 @@ export default function ProductsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-50">
-                {["Código Interno", "SKU", "Nombre", "Categoría", "UOM", "Proveedor", "Estado", "Acciones"].map((h) => (
+                {["Código Interno", "SKU", "Nombre", "Categoría", "UOM", "Stock Total", "Proveedor", "Estado", "Acciones"].map((h) => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -161,7 +161,7 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center">
+                  <td colSpan={9} className="px-5 py-12 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-400">
                       <div className="w-4 h-4 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
                       Cargando productos…
@@ -170,7 +170,7 @@ export default function ProductsPage() {
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-sm text-gray-400">
+                  <td colSpan={9} className="px-5 py-12 text-center text-sm text-gray-400">
                     No se encontraron productos.
                   </td>
                 </tr>
@@ -182,6 +182,16 @@ export default function ProductsPage() {
                     <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{p.name}</td>
                     <td className="px-5 py-3.5 text-sm text-gray-500">{p.categoryName}</td>
                     <td className="px-5 py-3.5 text-sm text-gray-500">{UOM_LABELS[p.uom]}</td>
+                    <td className="px-5 py-3.5">
+                      <span className={`inline-flex items-center gap-1.5 text-sm font-semibold ${p.totalStock <= p.reorderPoint ? "text-red-600" : "text-gray-900"}`}>
+                        {p.totalStock}
+                        {p.totalStock <= p.reorderPoint && (
+                          <svg width="14" height="14" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24" title="Stock bajo">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        )}
+                      </span>
+                    </td>
                     <td className="px-5 py-3.5 text-sm text-gray-500">{p.supplierName}</td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ${p.active ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>

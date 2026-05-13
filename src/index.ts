@@ -52,12 +52,10 @@ export type PurchaseOrderType =
 
 export type PurchaseOrderStatus =
   | "PENDING"
-  | "APPROVED"
   | "IN_TRANSIT"
   | "DELIVERED"
   | "PARTIALLY_DELIVERED"
-  | "CANCELLED"
-  | "REJECTED";
+  | "CANCELLED";
 
 // ─── Products ────────────────────────────────────────────────────────────────
 export interface ProductResponse {
@@ -69,6 +67,7 @@ export interface ProductResponse {
   sapCode: string;
   uom: Uom;
   reorderPoint: number;
+  totalStock: number;
   active: boolean;
   supplierId: number;
   supplierName: string;

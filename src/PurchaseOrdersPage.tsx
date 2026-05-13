@@ -33,8 +33,8 @@ import { CheckIcon } from "@heroicons/react/24/outline";
 const PRIMARY = "#7B1A1A";
 
 const ALL_STATUSES: PurchaseOrderStatus[] = [
-  "PENDING", "APPROVED", "IN_TRANSIT", "DELIVERED",
-  "PARTIALLY_DELIVERED", "CANCELLED", "REJECTED",
+  "PENDING", "IN_TRANSIT", "DELIVERED",
+  "PARTIALLY_DELIVERED", "CANCELLED",
 ];
 
 export default function PurchaseOrdersPage() {
@@ -108,7 +108,7 @@ export default function PurchaseOrdersPage() {
       await approveOrder(id);
       fetchOrders();
       if (detailOrder?.id === id) {
-        setDetailOrder((prev) => prev ? { ...prev, status: "APPROVED" } : null);
+        setDetailOrder(null);
       }
     } finally {
       setSaving(false);
@@ -252,36 +252,48 @@ export default function PurchaseOrdersPage() {
                     </td>
                     <td className="px-5 py-3.5 text-sm text-gray-500">{order.items.length} ítem(s)</td>
                     <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => setDetailOrder(order)}
-                          className="text-xs font-semibold hover:underline"
+                          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                           style={{ color: PRIMARY }}
+                          title="Ver detalle"
                         >
-                          Ver
+                          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                          </svg>
                         </button>
                         {order.status === "PENDING" && canApprove && (
                           <button
                             onClick={() => handleApprove(order.id)}
-                            className="text-xs font-semibold text-blue-600 hover:underline"
+                            className="p-1.5 rounded-lg hover:bg-blue-50 transition-colors text-blue-600"
+                            title="Aprobar"
                           >
-                            Aprobar
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
                           </button>
                         )}
-                        {(order.status === "APPROVED" || order.status === "IN_TRANSIT") && canReceive && (
+                        {order.status === "IN_TRANSIT" && canReceive && (
                           <button
                             onClick={() => setReceiveOrder(order)}
-                            className="text-xs font-semibold text-green-600 hover:underline"
+                            className="p-1.5 rounded-lg hover:bg-green-50 transition-colors text-green-600"
+                            title="Recibir mercancía"
                           >
-                            Recibir
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="12 11 12 17"/><line x1="9" y1="14" x2="12" y2="17"/><line x1="15" y1="14" x2="12" y2="17"/>
+                            </svg>
                           </button>
                         )}
-                        {(order.status === "PENDING" || order.status === "APPROVED") && canCancel && (
+                        {order.status === "PENDING" && canCancel && (
                           <button
                             onClick={() => handleCancel(order.id)}
-                            className="text-xs font-semibold text-red-500 hover:underline"
+                            className="p-1.5 rounded-lg hover:bg-red-50 transition-colors text-red-500"
+                            title="Cancelar"
                           >
-                            Cancelar
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                            </svg>
                           </button>
                         )}
                       </div>
@@ -391,35 +403,60 @@ export default function PurchaseOrdersPage() {
             </div>
 
             {/* Actions in modal */}
-            <div className="flex gap-3 pt-1">
+            <div className="flex gap-2 pt-1">
               {detailOrder.status === "PENDING" && canApprove && (
-                <button onClick={() => { handleApprove(detailOrder.id); setDetailOrder(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white" style={{ background: "#3B82F6" }}>
-                  Aprobar Orden
+                <button
+                  onClick={() => { handleApprove(detailOrder.id); setDetailOrder(null); }}
+                  className="p-2.5 rounded-xl text-white transition-opacity hover:opacity-90"
+                  style={{ background: "#3B82F6" }}
+                  title="Aprobar orden"
+                >
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                 </button>
               )}
-              {(detailOrder.status === "APPROVED" || detailOrder.status === "IN_TRANSIT") && canReceive && (
+              {detailOrder.status === "IN_TRANSIT" && canReceive && (
                 <button
                   onClick={() => { setReceiveOrder(detailOrder); setDetailOrder(null); }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+                  className="p-2.5 rounded-xl text-white transition-opacity hover:opacity-90"
                   style={{ background: "#10B981" }}
+                  title="Recibir mercancía"
                 >
-                  Recibir Mercancía
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><polyline points="12 11 12 17"/><line x1="9" y1="14" x2="12" y2="17"/><line x1="15" y1="14" x2="12" y2="17"/>
+                  </svg>
                 </button>
               )}
-              {(detailOrder.status === "PENDING" || detailOrder.status === "APPROVED") && canCancel && (
-                <button onClick={() => { handleCancel(detailOrder.id); setDetailOrder(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700">
-                  Cancelar Orden
+              {detailOrder.status === "PENDING" && canCancel && (
+                <button
+                  onClick={() => { handleCancel(detailOrder.id); setDetailOrder(null); }}
+                  className="p-2.5 rounded-xl text-white transition-opacity hover:opacity-90 bg-red-600"
+                  title="Cancelar orden"
+                >
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                  </svg>
                 </button>
               )}
               <button
                 onClick={() => handleDownloadPdf(detailOrder.id)}
                 disabled={downloadingPdf}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                title="Descargar PDF"
               >
-                {downloadingPdf ? "Generando PDF…" : "Descargar PDF"}
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
               </button>
-              <button onClick={() => setDetailOrder(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Cerrar
+              <button
+                onClick={() => setDetailOrder(null)}
+                className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                title="Cerrar"
+              >
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </button>
             </div>
           </div>
