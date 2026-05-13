@@ -186,7 +186,7 @@ export default function ProductsPage() {
                       <span className={`inline-flex items-center gap-1.5 text-sm font-semibold ${p.totalStock <= p.reorderPoint ? "text-red-600" : "text-gray-900"}`}>
                         {p.totalStock}
                         {p.totalStock <= p.reorderPoint && (
-                          <svg width="14" height="14" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24" title="Stock bajo">
+                          <svg width="14" height="14" fill="none" stroke="#EF4444" strokeWidth="2" viewBox="0 0 24 24" aria-label="Stock bajo">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                         )}

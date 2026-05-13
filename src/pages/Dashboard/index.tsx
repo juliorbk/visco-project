@@ -40,7 +40,6 @@ export default function DashboardPage() {
   }, [canViewOrders]);
 
   const pending = orders.filter((o) => o.status === "PENDING").length;
-  const approved = orders.filter((o) => o.status === "APPROVED").length;
   const inTransit = orders.filter((o) => o.status === "IN_TRANSIT").length;
   const activeProducts = products.filter((p) => p.active).length;
   const recentOrders = orders.slice(0, 5);
@@ -48,7 +47,7 @@ export default function DashboardPage() {
   const kpis = [
     { label: "Órdenes Totales", value: orders.length, icon: ShoppingCartIcon, color: "#7B1A1A" },
     { label: "Pendientes", value: pending, icon: ClockIcon, color: "#F59E0B" },
-    { label: "Aprobadas / En Tránsito", value: approved + inTransit, icon: CheckCircleIcon, color: "#10B981" },
+    { label: "En Tránsito", value: inTransit, icon: CheckCircleIcon, color: "#10B981" },
     { label: "Productos Activos", value: activeProducts, icon: ArchiveBoxIcon, color: "#6366F1" },
   ];
 

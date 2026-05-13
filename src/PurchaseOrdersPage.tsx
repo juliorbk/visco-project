@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Modal from "./components/Modal";
 import PurchaseOrderForm from "./components/PurchaseOrderForm";
 import ReceiveGoodsModal from "./components/ReceiveGoodsModal";
@@ -10,13 +10,14 @@ import {
   approveOrder,
   cancelOrder,
 } from "./api/procurement";
-import { receiveGoods } from "./api/warehouse";
+import { receiveGoods, getReceiptsByOrderId } from "./api/warehouse";
 import client from "./api/client";
 import { useAuth } from "./contexts/AuthContext";
 import type {
   PurchaseOrderResponse,
   PurchaseOrderRequest,
   PurchaseOrderStatus,
+  ReceiveGoodsResponse,
   SupplierOption,
   ProductResponse,
   ReceiveGoodsRequest,
@@ -39,6 +40,7 @@ const ALL_STATUSES: PurchaseOrderStatus[] = [
 
 export default function PurchaseOrdersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { hasRole, user } = useAuth();
   const canCreate = hasRole("ADMIN", "MANAGER", "PROCUREMENT");
   const canApprove = hasRole("ADMIN", "MANAGER");
@@ -54,8 +56,13 @@ export default function PurchaseOrdersPage() {
 
   const [createModal, setCreateModal] = useState(false);
   const [detailOrder, setDetailOrder] = useState<PurchaseOrderResponse | null>(null);
+  const [linkedReceipts, setLinkedReceipts] = useState<ReceiveGoodsResponse[]>([]);
+  const [loadingReceipts, setLoadingReceipts] = useState(false);
+  const [previousReceipts, setPreviousReceipts] = useState<ReceiveGoodsResponse[]>([]);
   const [receiveOrder, setReceiveOrder] = useState<PurchaseOrderResponse | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [detailReceipts, setDetailReceipts] = useState<ReceiveGoodsResponse[]>([]);
+  const [loadingDetailReceipts, setLoadingDetailReceipts] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -78,6 +85,27 @@ export default function PurchaseOrdersPage() {
       getOrder(Number(orderId)).then(setDetailOrder).catch(() => {});
     }
   }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!detailOrder) { setLinkedReceipts([]); return; }
+    setLoadingReceipts(true);
+    getReceiptsByOrderId(detailOrder.id)
+      .then(setLinkedReceipts)
+      .catch(() => setLinkedReceipts([]))
+      .finally(() => setLoadingReceipts(false));
+  }, [detailOrder]);
+
+  // Fetch receipt history when detail modal opens
+  useEffect(() => {
+    if (detailOrder) {
+      setLoadingDetailReceipts(true);
+      setDetailReceipts([]);
+      getReceiptsByOrderId(detailOrder.id)
+        .then(setDetailReceipts)
+        .catch(() => setDetailReceipts([]))
+        .finally(() => setLoadingDetailReceipts(false));
+    }
+  }, [detailOrder]);
 
   useEffect(() => {
     getSuppliers().then((data) => setSuppliers(data.filter((s) => s.active))).catch(() =>
@@ -131,6 +159,7 @@ export default function PurchaseOrdersPage() {
     try {
       await receiveGoods(orderId, data);
       setReceiveOrder(null);
+      setPreviousReceipts([]);
       fetchOrders();
     } finally {
       setSaving(false);
@@ -274,9 +303,17 @@ export default function PurchaseOrdersPage() {
                             </svg>
                           </button>
                         )}
-                        {order.status === "IN_TRANSIT" && canReceive && (
+                        {(order.status === "IN_TRANSIT" || order.status === "PARTIALLY_DELIVERED") && canReceive && (
                           <button
-                            onClick={() => setReceiveOrder(order)}
+                            onClick={async () => {
+                              try {
+                                const receipts = await getReceiptsByOrderId(order.id);
+                                setPreviousReceipts(receipts);
+                              } catch {
+                                setPreviousReceipts([]);
+                              }
+                              setReceiveOrder(order);
+                            }}
                             className="p-1.5 rounded-lg hover:bg-green-50 transition-colors text-green-600"
                             title="Recibir mercancía"
                           >
@@ -402,6 +439,83 @@ export default function PurchaseOrdersPage() {
               </table>
             </div>
 
+            {/* Receipt history */}
+            <div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+                Recepciones ({detailReceipts.length})
+              </div>
+              {loadingDetailReceipts ? (
+                <div className="text-sm text-gray-400 flex items-center gap-2 py-2">
+                  <div className="w-3 h-3 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
+                  Cargando recepciones…
+                </div>
+              ) : detailReceipts.length === 0 ? (
+                <div className="text-sm text-gray-400 py-2">Sin recepciones registradas.</div>
+              ) : (
+                <div className="space-y-2">
+                  {detailReceipts.map((r) => (
+                    <div key={r.id} className="bg-gray-50 rounded-xl p-3 text-sm flex items-center justify-between">
+                      <div>
+                        <span className="font-semibold text-gray-800">{r.receiptNumber}</span>
+                        <span className="text-gray-400 mx-2">·</span>
+                        <span className="text-gray-500">{formatDate(r.receivedAt)}</span>
+                        <span className="text-gray-400 mx-2">·</span>
+                        <span className="text-gray-500">{r.items.length} ítem(s)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full"
+                          style={{
+                            background: ORDER_STATUS_STYLE[r.updatedStatus].bg,
+                            color: ORDER_STATUS_STYLE[r.updatedStatus].color,
+                          }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: ORDER_STATUS_STYLE[r.updatedStatus].dot }} />
+                          {ORDER_STATUS_LABELS[r.updatedStatus]}
+                        </span>
+                        <button
+                          onClick={() => navigate(`/procurement/orders?orderId=${r.purchaseOrderId}`)}
+                          className="text-xs font-semibold hover:underline"
+                          style={{ color: PRIMARY }}
+                        >
+                          Ver
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Linked Receipts */}
+            {loadingReceipts ? (
+              <div className="text-sm text-gray-400 flex items-center gap-2">
+                <div className="w-3 h-3 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
+                Cargando recepciones…
+              </div>
+            ) : linkedReceipts.length > 0 ? (
+              <div>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Recepciones Vinculadas</div>
+                <div className="space-y-2">
+                  {linkedReceipts.map((r) => (
+                    <div key={r.id} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-bold" style={{ color: PRIMARY }}>{r.receiptNumber}</span>
+                        <span className="text-xs text-gray-400 ml-3">{new Date(r.receivedAt).toLocaleDateString("es-VE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full" style={{ background: ORDER_STATUS_STYLE[r.updatedStatus].bg, color: ORDER_STATUS_STYLE[r.updatedStatus].color }}>
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: ORDER_STATUS_STYLE[r.updatedStatus].dot }} />
+                          {ORDER_STATUS_LABELS[r.updatedStatus]}
+                        </span>
+                        <span className="text-xs text-gray-400">{r.items.length} ítem(s)</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             {/* Actions in modal */}
             <div className="flex gap-2 pt-1">
               {detailOrder.status === "PENDING" && canApprove && (
@@ -416,9 +530,18 @@ export default function PurchaseOrdersPage() {
                   </svg>
                 </button>
               )}
-              {detailOrder.status === "IN_TRANSIT" && canReceive && (
+              {(detailOrder.status === "IN_TRANSIT" || detailOrder.status === "PARTIALLY_DELIVERED") && canReceive && (
                 <button
-                  onClick={() => { setReceiveOrder(detailOrder); setDetailOrder(null); }}
+                  onClick={async () => {
+                    try {
+                      const receipts = await getReceiptsByOrderId(detailOrder.id);
+                      setPreviousReceipts(receipts);
+                    } catch {
+                      setPreviousReceipts([]);
+                    }
+                    setReceiveOrder(detailOrder);
+                    setDetailOrder(null);
+                  }}
                   className="p-2.5 rounded-xl text-white transition-opacity hover:opacity-90"
                   style={{ background: "#10B981" }}
                   title="Recibir mercancía"
@@ -467,7 +590,8 @@ export default function PurchaseOrdersPage() {
       <ReceiveGoodsModal
         open={!!receiveOrder}
         order={receiveOrder}
-        onClose={() => setReceiveOrder(null)}
+        previousReceipts={previousReceipts}
+        onClose={() => { setReceiveOrder(null); setPreviousReceipts([]); }}
         onConfirm={handleReceive}
         loading={saving}
       />
