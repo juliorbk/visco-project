@@ -56,13 +56,11 @@ export default function PurchaseOrdersPage() {
 
   const [createModal, setCreateModal] = useState(false);
   const [detailOrder, setDetailOrder] = useState<PurchaseOrderResponse | null>(null);
-  const [linkedReceipts, setLinkedReceipts] = useState<ReceiveGoodsResponse[]>([]);
-  const [loadingReceipts, setLoadingReceipts] = useState(false);
+  const [detailReceipts, setDetailReceipts] = useState<ReceiveGoodsResponse[]>([]);
+  const [loadingDetailReceipts, setLoadingDetailReceipts] = useState(false);
   const [previousReceipts, setPreviousReceipts] = useState<ReceiveGoodsResponse[]>([]);
   const [receiveOrder, setReceiveOrder] = useState<PurchaseOrderResponse | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [detailReceipts, setDetailReceipts] = useState<ReceiveGoodsResponse[]>([]);
-  const [loadingDetailReceipts, setLoadingDetailReceipts] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -87,12 +85,12 @@ export default function PurchaseOrdersPage() {
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (!detailOrder) { setLinkedReceipts([]); return; }
-    setLoadingReceipts(true);
+    if (!detailOrder) { setDetailReceipts([]); return; }
+    setLoadingDetailReceipts(true);
     getReceiptsByOrderId(detailOrder.id)
-      .then(setLinkedReceipts)
-      .catch(() => setLinkedReceipts([]))
-      .finally(() => setLoadingReceipts(false));
+      .then(setDetailReceipts)
+      .catch(() => setDetailReceipts([]))
+      .finally(() => setLoadingDetailReceipts(false));
   }, [detailOrder]);
 
   // Fetch receipt history when detail modal opens
@@ -486,35 +484,6 @@ export default function PurchaseOrdersPage() {
                 </div>
               )}
             </div>
-
-            {/* Linked Receipts */}
-            {loadingReceipts ? (
-              <div className="text-sm text-gray-400 flex items-center gap-2">
-                <div className="w-3 h-3 border-2 border-gray-300 border-t-red-600 rounded-full animate-spin" />
-                Cargando recepciones…
-              </div>
-            ) : linkedReceipts.length > 0 ? (
-              <div>
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Recepciones Vinculadas</div>
-                <div className="space-y-2">
-                  {linkedReceipts.map((r) => (
-                    <div key={r.id} className="bg-gray-50 rounded-xl p-3 flex items-center justify-between">
-                      <div>
-                        <span className="text-sm font-bold" style={{ color: PRIMARY }}>{r.receiptNumber}</span>
-                        <span className="text-xs text-gray-400 ml-3">{new Date(r.receivedAt).toLocaleDateString("es-VE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full" style={{ background: ORDER_STATUS_STYLE[r.updatedStatus].bg, color: ORDER_STATUS_STYLE[r.updatedStatus].color }}>
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: ORDER_STATUS_STYLE[r.updatedStatus].dot }} />
-                          {ORDER_STATUS_LABELS[r.updatedStatus]}
-                        </span>
-                        <span className="text-xs text-gray-400">{r.items.length} ítem(s)</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
 
             {/* Actions in modal */}
             <div className="flex gap-2 pt-1">
