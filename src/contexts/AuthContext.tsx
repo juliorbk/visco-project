@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { login as apiLogin } from "../api/auth";
 import type { UserDTO, UserRole } from "../index";
@@ -30,6 +30,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserDTO | null>(loadUser);
   const [token, setToken] = useState<string | null>(loadToken);
+
+  useEffect(() => {
+    const handler = () => {
+      localStorage.removeItem("visco_token");
+      localStorage.removeItem("visco_user");
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener("auth:unauthorized", handler);
+    return () => window.removeEventListener("auth:unauthorized", handler);
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const data = await apiLogin({ email, password });

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import { getOrders } from "../../api/procurement";
 import { getProducts } from "../../api/products";
 import type { PurchaseOrderResponse, ProductResponse } from "../../index";
@@ -12,21 +13,31 @@ import { MOCK_METRICS } from "./metricsData";
 
 const PRIMARY = "#7B1A1A";
 
+const ORDER_ROLES = ["ADMIN", "MANAGER", "PROCUREMENT"] as const;
+
 export default function DashboardPage() {
+  const { hasRole } = useAuth();
+  const canViewOrders = hasRole(...ORDER_ROLES);
   const [orders, setOrders] = useState<PurchaseOrderResponse[]>([]);
   const [products, setProducts] = useState<ProductResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      getOrders().catch(() => [] as PurchaseOrderResponse[]),
-      getProducts({ page: 0, size: 100 }).then((r) => r.content ?? (r as any)).catch(() => [] as ProductResponse[]),
-    ]).then(([ords, prods]) => {
-      setOrders(ords);
-      setProducts(prods);
+    const promises: Promise<any>[] = [];
+    if (canViewOrders) {
+      promises.push(getOrders().catch(() => [] as PurchaseOrderResponse[]));
+    } else {
+      promises.push(Promise.resolve([] as PurchaseOrderResponse[]));
+    }
+    promises.push(
+      getProducts({ page: 0, size: 100 }).then((r) => r.content ?? (r as any)).catch(() => [] as ProductResponse[])
+    );
+    Promise.all(promises).then(([ords, prods]) => {
+      setOrders(ords as PurchaseOrderResponse[]);
+      setProducts(prods as ProductResponse[]);
       setLoading(false);
     });
-  }, []);
+  }, [canViewOrders]);
 
   const pending = orders.filter((o) => o.status === "PENDING").length;
   const approved = orders.filter((o) => o.status === "APPROVED").length;

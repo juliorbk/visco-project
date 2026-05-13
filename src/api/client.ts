@@ -16,14 +16,12 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally → redirect to login
+// Handle 401 globally → soft logout via event (403 means authenticated but unauthorized)
 client.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("visco_token");
-      localStorage.removeItem("visco_user");
-      window.location.href = "/login";
+      window.dispatchEvent(new Event("auth:unauthorized"));
     }
     return Promise.reject(err);
   }

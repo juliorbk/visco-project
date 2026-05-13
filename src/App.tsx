@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
 import LoginPage from "./LoginPage";
 import DashboardPage from "./pages/Dashboard";
@@ -15,6 +16,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ErrorBoundary>
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
@@ -50,6 +52,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+      </ErrorBoundary>
       </AuthProvider>
     </BrowserRouter>
   );

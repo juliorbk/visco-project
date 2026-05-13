@@ -62,6 +62,8 @@ export default function PurchaseOrdersPage() {
     try {
       const data = await getOrders();
       setOrders(data);
+    } catch {
+      setOrders([]);
     } finally {
       setLoading(false);
     }

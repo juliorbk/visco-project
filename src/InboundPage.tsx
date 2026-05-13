@@ -22,6 +22,8 @@ export default function InboundPage() {
     try {
       const data = await getGoodsReceipts();
       setReceipts(Array.isArray(data) ? data : (data as any).content ?? []);
+    } catch {
+      setReceipts([]);
     } finally {
       setLoading(false);
     }

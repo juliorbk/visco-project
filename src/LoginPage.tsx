@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { login } from "./api/auth";
+import { useAuth } from "./contexts/AuthContext";
 import { ArchiveBoxIcon, CheckCircleIcon, BuildingOffice2Icon } from "@heroicons/react/24/outline";
 
 const PRIMARY = "#7B1A1A";
@@ -8,6 +8,7 @@ const PRIMARY_DARK = "#5C1212";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -16,17 +17,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setError("");
     try {
-      const data = await login({ email, password });
-      localStorage.setItem("visco_token", data.token);
-      localStorage.setItem("visco_user", JSON.stringify(data.user));
+      await login(email, password);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message ?? "Credenciales inválidas. Intenta de nuevo."
-      );
+      const status = err?.response?.status;
+      const message = err?.response?.data?.message;
+      if (status === 429) {
+        setError("Demasiados intentos. Espera unos segundos e intenta de nuevo.");
+      } else {
+        setError(message ?? "Credenciales inválidas. Intenta de nuevo.");
+      }
     } finally {
       setLoading(false);
     }
